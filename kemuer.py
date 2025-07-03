@@ -820,6 +820,9 @@ try:
     init()
 
     # 任务1：考生人脸识别
+    
+    set_camera_updown(180)
+    raise KeyError
 
     while True:
         for i in range(10):
