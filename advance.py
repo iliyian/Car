@@ -379,7 +379,7 @@ def display_exam_result():
     """显示考试结果"""
     print("\n" + "="*50)
     print("科目二考试结束!")
-    print(f"最终得分: {exam_score}分")
+    # print(f"最终得分: {exam_score}分")
 
     if exam_score >= 80:
         print("考试合格! 恭喜通过科目二考试!")
