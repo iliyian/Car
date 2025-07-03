@@ -704,7 +704,7 @@ def upload():
 
 
 # 调用百度API接口，进行人脸比对
-def picture_shoot(image_name='img.jpg', image_path='/home/pi/Desktop/')->None:
+def picture_shoot(image_name='img.jpg', image_path='/home/pi/Desktop/'):
     '''
     调用摄像头拍照并保存图片到本地
     :param image_name: 图片名字
