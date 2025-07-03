@@ -418,7 +418,7 @@ def main_exam():
 
     for i, project in enumerate(projects):
         current_project = i
-        print(f"\n开始第{i+1}项: {project_names[i]}")
+        # print(f"\n开始第{i+1}项: {project_names[i]}")
         time.sleep(1)
 
         try:
@@ -431,7 +431,7 @@ def main_exam():
             print("分数已扣完，考试结束!")
             break
 
-        print(f"第{i+1}项完成，当前分数: {exam_score}分")
+        # print(f"第{i+1}项完成，当前分数: {exam_score}分")
         time.sleep(2)
 
     display_exam_result()
