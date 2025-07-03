@@ -424,7 +424,7 @@ def main_exam():
         try:
             project()
         except Exception as e:
-            print(f"项目执行出错: {e}")
+            # print(f"项目执行出错: {e}")
             deduct_score(20, "操作失误")
 
         if exam_score <= 0:
