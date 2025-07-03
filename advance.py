@@ -192,8 +192,8 @@ def deduct_score(points, reason):
     """扣分函数"""
     global exam_score
     exam_score -= points
-    print(f"扣分: {points}分 - {reason}")
-    print(f"当前分数: {exam_score}分")
+    # print(f"扣分: {points}分 - {reason}")
+    # print(f"当前分数: {exam_score}分")
     buzzer_beep(2)  # 扣分提示音
     set_led_color(1, 0, 0)  # 红灯警告
     time.sleep(1)
