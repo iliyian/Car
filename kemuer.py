@@ -822,6 +822,7 @@ try:
     # 任务1：考生人脸识别
     
     set_camera_updown(180)
+    pwm_UpDownServo.ChangeDutyCycle(180)
     raise KeyError
 
     while True:
