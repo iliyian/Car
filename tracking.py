@@ -146,7 +146,7 @@ try:
         #处理右锐角和右直角的转动
         if (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and  TrackSensorRightValue2 == False:
            spin_right(35, 30)
-        time.sleep(0.1)
+           time.sleep(0.1)
  
         #四路循迹引脚电平状态
         # 0 X 0 0       
@@ -155,7 +155,7 @@ try:
         #处理左锐角和左直角的转动
         elif TrackSensorLeftValue1 == False and (TrackSensorRightValue1 == False or  TrackSensorRightValue2 == False):
             spin_left(30,35 )
-        time.sleep(0.1)
+            time.sleep(0.1)
   
         # 0 X X X
         #最左边检测到
