@@ -542,7 +542,7 @@ def main():
     
     init()
     print("硬件初始化完成")
-    key_scan()
+    #key_scan()
     print("开始运行!")
     print("-" * 50)
     
