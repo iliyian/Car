@@ -9,7 +9,7 @@ import httpx
 # 请将 "YOUR_OPENAI_API_KEY" 替换为您的 OpenAI API 密钥
 # 强烈建议使用环境变量来设置您的 API 密钥，以避免泄露。
 # 例如: os.environ.get("OPENAI_API_KEY")
-API_KEY = "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" 
+API_KEY = "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" 
 # 您想要使用的模型
 MODEL = "openai/gpt-4.1-mini"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
