@@ -143,11 +143,16 @@ print("=" * 50)
 
 #try/except语句用来检测try语句块中的错误，
 #从而让except语句捕获异常信息并处理。
+
+cnt = 0
+
 try:
     init()
     print("硬件初始化完成")
     print("开始循迹测试...")
     print("-" * 50)
+    
+    
     
     while True:
         #检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
@@ -156,13 +161,23 @@ try:
         TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
         TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
         TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
-        time.sleep(0.1)
+        
         
         # 显示传感器状态
         sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{}".format(
             TrackSensorLeftValue1, TrackSensorLeftValue2, 
             TrackSensorRightValue1, TrackSensorRightValue2)
         print(sensor_status, end=" | ")
+        
+        
+        if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
+            if cnt == 0:
+                run(20, 20)
+            else:
+                brake()
+            time.sleep(0.1)
+            cnt += 1
+            continue
 
         #四路循迹引脚电平状态
         # 0 0 X 0
@@ -170,7 +185,7 @@ try:
         # 0 1 X 0
         #以上6种电平状态时小车原地右转
         #处理右锐角和右直角的转动
-        if (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and  TrackSensorRightValue2 == False:
+        elif (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and  TrackSensorRightValue2 == False:
            print("右锐角/直角转弯")
            spin_right(35, 30)
            time.sleep(0.1)
