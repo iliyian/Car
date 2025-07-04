@@ -359,7 +359,7 @@ try:
             distance, sound_speed, ENVIRONMENT_TEMPERATURE), end=" | ")
         
         # 如果检测到障碍物，执行绕行
-        if distance < OBSTACLE_DISTANCE:
+        if distance < OBSTACLE_DISTANCE and cnt > 0:
             print("检测到障碍物！")
             if avoid_obstacle():
                 continue  # 绕行成功，继续循迹
