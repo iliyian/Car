@@ -186,6 +186,12 @@ def avoid_obstacle():
     time.sleep(0.5)  # 前进0.5秒
     brake()
     
+    print("转弯")
+    spin_right(40, 40)
+    time.sleep(0.5)
+    brake()
+    time.sleep(0.1)
+    
     print("硬编码绕行完成，继续循迹")
     return True
 
