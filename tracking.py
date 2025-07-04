@@ -187,7 +187,7 @@ try:
         #处理右锐角和右直角的转动
         elif (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and  TrackSensorRightValue2 == False:
            print("右锐角/直角转弯")
-           spin_right(35, 30)
+           spin_right(65, 60)
            time.sleep(0.1)
  
         #四路循迹引脚电平状态
@@ -197,7 +197,7 @@ try:
         #处理左锐角和左直角的转动
         elif TrackSensorLeftValue1 == False and (TrackSensorRightValue1 == False or  TrackSensorRightValue2 == False):
             print("左锐角/直角转弯")
-            spin_left(30,35 )
+            spin_left(30, 35)
             time.sleep(0.1)
   
         # 0 X X X
