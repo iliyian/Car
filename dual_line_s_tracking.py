@@ -171,28 +171,28 @@ try:
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
             TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
             print("双线S型右小弯 (0111)")
-            right(85, 85)  # 右转，左轮快右轮慢
+            right(100, 85)  # 右转，左轮快右轮慢
             time.sleep(0.1)
             
         # 1110 - 向左小弯 (右边第一个传感器检测到黑线，其他都是白线)
         elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
               TrackSensorRightValue1 == True and TrackSensorRightValue2 == False):
             print("双线S型左小弯 (1110)")
-            left(85, 85)  # 左转，右轮快左轮慢
+            left(85, 100)  # 左转，右轮快左轮慢
             time.sleep(0.1)
             
         # 0011 - 右弯 (左边两个传感器检测到黑线)
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
             print("右弯 (0011)")
-            right(85, 85)  # 右转，左轮快右轮慢
+            right(100, 85)  # 右转，左轮快右轮慢
             time.sleep(0.1)
             
         # 1100 - 左弯 (右边两个传感器检测到黑线)
         elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
             print("左弯 (1100)")
-            left(85, 85)  # 左转，右轮快左轮慢
+            left(85, 100)  # 左转，右轮快左轮慢
             time.sleep(0.1)
             
         # 0011 - 双线直行 (两个中间传感器检测到黑线)
