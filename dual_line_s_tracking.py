@@ -162,9 +162,13 @@ try:
             TrackSensorRightValue1, TrackSensorRightValue2)
         print(sensor_status, end=" | ")
         
+        if TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and TrackSensorRightValue1 == True and TrackSensorRightValue2 == True:
+            run(20, 20)
+            time.sleep(0.05)
+        
         # 双线S型过弯的核心逻辑
         # 0111 - 向右小弯 (左边第一个传感器检测到黑线，其他都是白线)
-        if (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
+        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
             TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
             print("双线S型右小弯 (0111)")
             right(25, 15)  # 右转，左轮快右轮慢
