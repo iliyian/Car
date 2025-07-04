@@ -1,4 +1,5 @@
 #-*- coding:UTF-8 -*-
+from turtle import Turtle
 import RPi.GPIO as GPIO
 import time
 
@@ -111,17 +112,6 @@ def brake():
     GPIO.output(IN3, GPIO.LOW)
     GPIO.output(IN4, GPIO.LOW)
 
-#按键检测
-def key_scan():
-    while GPIO.input(key):
-        pass
-    while not GPIO.input(key):
-        time.sleep(0.01)
-        if not GPIO.input(key):
-            time.sleep(0.01)
-        while not GPIO.input(key):
-            pass
-
 #延时2s
 time.sleep(2)
 
@@ -163,64 +153,72 @@ try:
         print(sensor_status, end=" | ")
         
         # 双线S型过弯的核心逻辑
-        # 1111 - 双线直行（全部检测到白线）
-        if(TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and
-                       TrackSensorRightValue1 == True and TrackSensorRightValue2 == True )
-            run(20 , 20)
-            time.sleep(0.05)
-
-        # 0111 - 向右小弯 (左边第一个传感器检测到黑线，其他都是白线)
-        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and
-            TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
-            print("双线S型右小弯 (0111)")
-            right(25, 15)  # 右转，左轮快右轮慢
-            time.sleep(0.05)
-            
-        # 1110 - 向左小弯 (右边第一个传感器检测到黑线，其他都是白线)
-        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
-              TrackSensorRightValue1 == True and TrackSensorRightValue2 == False):
-            print("双线S型左小弯 (1110)")
-            left(15, 25)  # 左转，右轮快左轮慢
-            time.sleep(0.05)
-            
-        # 0011 - 右弯 (左边两个传感器检测到黑线)
-        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
-              TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
-            print("右弯 (0011)")
-            right(25, 15)  # 右转，左轮快右轮慢
-            
-        # 1100 - 左弯 (右边两个传感器检测到黑线)
-        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
-              TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
-            print("左弯 (1100)")
-            left(15, 25)  # 左转，右轮快左轮慢
-            
-        # 0110 - 双线直行 (两个外侧传感器检测到黑线)
-        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
-              TrackSensorRightValue1 == True and TrackSensorRightValue2 == False):
-            print("双线直行 (0110)")
-            run(22, 22)
-            
-        # 1001 - 双线直行 (两个中间传感器检测到黑线)
-        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == False and 
-              TrackSensorRightValue1 == False and TrackSensorRightValue2 == True):
-            print("双线直行 (1001)")
-            run(22, 22)
-            
-            
-        # 0000 - 全部检测到黑线，可能是交叉路口或起始点
-        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
-              TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
-            print("全线检测 (0000) - 交叉路口或起始点")
-            break  # 停止
+        if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
+            if cnt == 0:
+                run(20, 20)
+            else:
+                brake()
             time.sleep(0.1)
+            cnt += 1
+            continue
 
-            
-        # 其他情况的处理
+        #四路循迹引脚电平状态
+        # 0 0 X 0
+        # 1 0 X 0
+        # 0 1 X 0
+        #以上6种电平状态时小车原地右转
+        #处理右锐角和右直角的转动
+        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True) and (TrackSensorRightValue2 == False or TrackSensorRightValue1 == False):
+           print("最右边触线，左转")
+           left(0,35)
+           time.sleep(0.1)
+ 
+        #四路循迹引脚电平状态
+        # 0 X 0 0       
+        # 0 X 0 1 
+        # 0 X 1 0       
+        #处理左锐角和左直角的转动
+        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False) and (TrackSensorRightValue2 == True or TrackSensorRightValue1 == True):
+           print("最左边触线，右转")
+           right(35, 0)
+           time.sleep(0.1)
+  
+        # 0 X X X
+        #最左边检测到
+        # elif TrackSensorLeftValue1 == False:
+        #     print("最左边检测到，左转")
+        #     spin_left(30, 30)
+     
+        # # X X X 0
+        # #最右边检测到
+        # elif TrackSensorRightValue2 == False:
+        #     print("最右边检测到，右转")
+        #     spin_right(30, 30)
+   
+        #四路循迹引脚电平状态
+        # X 0 1 X
+        #处理左小弯
+        # elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == True:
+        #     print("左小弯")
+        #     left(0,35)
+   
+        # #四路循迹引脚电平状态
+        # # X 1 0 X  
+        # #处理右小弯
+        # elif TrackSensorLeftValue2 == True and TrackSensorRightValue1 == False:
+        #     print("右小弯")
+        #     right(35, 0)
+   
+        #四路循迹引脚电平状态
+        # X 0 0 X
+        #处理直线
+        elif TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and TrackSensorRightValue1 == True and TrackSensorRightValue2 == True:
+            print("直线行驶")
+            run(20, 20)
+   
+        #当为1 1 1 1时小车保持上一个小车运行状态
         else:
-            print("其他状态 - 保持当前运动")
-            # 可以根据需要添加更多的状态处理
-            
+            print("保持当前状态")
 except KeyboardInterrupt:
     print("\n" + "=" * 50)
     print("程序被用户中断")
