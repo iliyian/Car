@@ -55,6 +55,8 @@ MAX_DISTANCE = 500      # 最大检测距离(cm)
 #循迹参数
 LINE_DETECT_DELAY = 0.1  # 循迹检测延时
 DOUBLE_LINE_FORWARD_TIME = 0.5  # 双线直行时间
+TURN_DELAY = 0.05  # 转弯检测延时
+SENSOR_DEBOUNCE_TIME = 0.02  # 传感器防抖时间
 
 #停车参数
 BACKWARD_TIME_1 = 1.0    # 第一次后退时间
@@ -78,6 +80,10 @@ MIN_BLACK_COUNT = 4        # 检测特殊标识所需的最少黑线数量
 ENABLE_PRINT = True        # 启用打印输出
 ENABLE_DISTANCE_PRINT = False  # 启用距离打印
 ENABLE_SENSOR_PRINT = False     # 启用传感器状态打印
+
+#转弯补偿配置
+TURN_COMPENSATION = True   # 启用转弯补偿
+COMPENSATION_DELAY = 0.1   # 补偿延时
 
 #PWM配置
 PWM_FREQUENCY = 2000       # PWM频率
@@ -249,6 +255,95 @@ def detect_double_line():
     # 全部为白线时返回True
     return (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
             TrackSensorRightValue1 == True and TrackSensorRightValue2 == True)
+
+#稳定的传感器读取函数（多次读取取平均值）
+def read_sensors_stable():
+    readings = []
+    for i in range(3):  # 读取3次
+        TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
+        TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
+        TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
+        TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
+        readings.append([TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2])
+        time.sleep(SENSOR_DEBOUNCE_TIME)
+    
+    # 取多数值作为最终结果
+    final_values = []
+    for i in range(4):
+        values = [reading[i] for reading in readings]
+        # 如果False的数量大于True的数量，则认为是False（检测到黑线）
+        final_values.append(values.count(False) > values.count(True))
+    
+    return final_values[0], final_values[1], final_values[2], final_values[3]
+
+#改进的转弯检测函数
+def detect_turn_type():
+    # 使用稳定的传感器读取
+    L1, L2, R1, R2 = read_sensors_stable()
+    
+    left_black = [L1, L2].count(False)
+    right_black = [R1, R2].count(False)
+    
+    if ENABLE_SENSOR_PRINT:
+        print("稳定传感器状态: L1:{} L2:{} R1:{} R2:{}".format(L1, L2, R1, R2))
+        print("左侧黑线数: {}, 右侧黑线数: {}".format(left_black, right_black))
+    
+    # 判断转弯类型
+    if left_black >= 2 and right_black >= 1:
+        return "left_sharp"  # 左锐角
+    elif right_black >= 2 and left_black >= 1:
+        return "right_sharp"  # 右锐角
+    elif left_black >= 1 and right_black >= 1:
+        if left_black > right_black:
+            return "left_90"  # 左直角
+        else:
+            return "right_90"  # 右直角
+    elif left_black >= 1:
+        return "left_slight"  # 左轻微
+    elif right_black >= 1:
+        return "right_slight"  # 右轻微
+    else:
+        return "straight"  # 直线
+
+#转弯补偿函数
+def turn_compensation(turn_type):
+    if not TURN_COMPENSATION:
+        return
+    
+    print("执行转弯补偿...")
+    
+    # 根据转弯类型进行补偿
+    if turn_type in ["left_sharp", "left_90"]:
+        # 左转补偿：继续左转一小段时间
+        spin_left(SPIN_LEFT_SPEED, SPIN_LEFT_SPEED)
+        time.sleep(COMPENSATION_DELAY)
+        brake()
+        time.sleep(SENSOR_DEBOUNCE_TIME)
+        
+        # 检查是否回到线上
+        L1, L2, R1, R2 = read_sensors_stable()
+        if L1 and L2 and R1 and R2:  # 如果还是全部白线
+            print("补偿后仍未检测到线，继续左转")
+            spin_left(SPIN_LEFT_SPEED, SPIN_LEFT_SPEED)
+            time.sleep(COMPENSATION_DELAY)
+            brake()
+    
+    elif turn_type in ["right_sharp", "right_90"]:
+        # 右转补偿：继续右转一小段时间
+        spin_right(SPIN_RIGHT_SPEED, SPIN_RIGHT_SPEED)
+        time.sleep(COMPENSATION_DELAY)
+        brake()
+        time.sleep(SENSOR_DEBOUNCE_TIME)
+        
+        # 检查是否回到线上
+        L1, L2, R1, R2 = read_sensors_stable()
+        if L1 and L2 and R1 and R2:  # 如果还是全部白线
+            print("补偿后仍未检测到线，继续右转")
+            spin_right(SPIN_RIGHT_SPEED, SPIN_RIGHT_SPEED)
+            time.sleep(COMPENSATION_DELAY)
+            brake()
+    
+    print("转弯补偿完成")
 
 #超声波避障函数
 def avoid_obstacle():
@@ -451,66 +546,64 @@ def tracking():
         current_state = STATE_DOUBLE_LINE
         return
     
-    # 获取循迹传感器状态
-    TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
-    TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
-    TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
-    TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
-
-    if ENABLE_SENSOR_PRINT:
-        print("传感器状态: L1:{} L2:{} R1:{} R2:{}".format(
-            TrackSensorLeftValue1, TrackSensorLeftValue2, 
-            TrackSensorRightValue1, TrackSensorRightValue2))
-
-    # 循迹控制逻辑
-    # 处理右锐角和右直角的转动
-    if (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and TrackSensorRightValue2 == False:
-        if ENABLE_PRINT:
-            print("右锐角/直角转弯")
-        spin_right(SPIN_RIGHT_SPEED, SPIN_RIGHT_SPEED-5)
-        time.sleep(LINE_DETECT_DELAY)
+    # 使用改进的转弯检测
+    turn_type = detect_turn_type()
     
-    # 处理左锐角和左直角的转动
-    elif TrackSensorLeftValue1 == False and (TrackSensorRightValue1 == False or TrackSensorRightValue2 == False):
+    # 根据转弯类型执行相应的动作
+    if turn_type == "left_sharp":
         if ENABLE_PRINT:
-            print("左锐角/直角转弯")
-        spin_left(SPIN_LEFT_SPEED-5, SPIN_LEFT_SPEED)
-        time.sleep(LINE_DETECT_DELAY)
-    
-    # 最左边检测到
-    elif TrackSensorLeftValue1 == False:
-        if ENABLE_PRINT:
-            print("最左边检测到，左转")
+            print("左锐角转弯")
         spin_left(SPIN_LEFT_SPEED, SPIN_LEFT_SPEED)
+        time.sleep(TURN_DELAY * 2)  # 锐角转弯需要更长时间
+        brake()
+        turn_compensation("left_sharp")
     
-    # 最右边检测到
-    elif TrackSensorRightValue2 == False:
+    elif turn_type == "right_sharp":
         if ENABLE_PRINT:
-            print("最右边检测到，右转")
+            print("右锐角转弯")
         spin_right(SPIN_RIGHT_SPEED, SPIN_RIGHT_SPEED)
+        time.sleep(TURN_DELAY * 2)  # 锐角转弯需要更长时间
+        brake()
+        turn_compensation("right_sharp")
     
-    # 处理左小弯
-    elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == True:
+    elif turn_type == "left_90":
         if ENABLE_PRINT:
-            print("左小弯")
+            print("左直角转弯")
+        spin_left(SPIN_LEFT_SPEED, SPIN_LEFT_SPEED)
+        time.sleep(TURN_DELAY)
+        brake()
+        turn_compensation("left_90")
+    
+    elif turn_type == "right_90":
+        if ENABLE_PRINT:
+            print("右直角转弯")
+        spin_right(SPIN_RIGHT_SPEED, SPIN_RIGHT_SPEED)
+        time.sleep(TURN_DELAY)
+        brake()
+        turn_compensation("right_90")
+    
+    elif turn_type == "left_slight":
+        if ENABLE_PRINT:
+            print("左轻微转弯")
         left(LEFT_SPEED, RIGHT_SPEED)
+        time.sleep(TURN_DELAY)
     
-    # 处理右小弯
-    elif TrackSensorLeftValue2 == True and TrackSensorRightValue1 == False:
+    elif turn_type == "right_slight":
         if ENABLE_PRINT:
-            print("右小弯")
+            print("右轻微转弯")
         right(RIGHT_SPEED, LEFT_SPEED)
+        time.sleep(TURN_DELAY)
     
-    # 处理直线
-    elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False:
+    elif turn_type == "straight":
         if ENABLE_PRINT:
             print("直线行驶")
         run(NORMAL_SPEED, NORMAL_SPEED)
     
-    # 当为1 1 1 1时小车保持上一个小车运行状态
     else:
         if ENABLE_PRINT:
-            print("保持当前状态")
+            print("未知状态，停止等待")
+        brake()
+        time.sleep(SENSOR_DEBOUNCE_TIME)
 
 #主程序
 def main():
