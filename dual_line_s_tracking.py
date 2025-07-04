@@ -225,19 +225,19 @@ try:
             run(40, 40)
             time.sleep(0.1)
             
-        # # 0001 - 右侧偏移修正
-        # elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
-        #       TrackSensorRightValue1 == False and TrackSensorRightValue2 == True):
-        #     print("右侧偏移修正 (0001)")
-        #     left(38, 85)
-        #     time.sleep(0.1)
-        #     
-        # # 1000 - 左侧偏移修正
-        # elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == False and 
-        #       TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
-        #     print("左侧偏移修正 (1000)")
-        #     right(85, 38)
-        #     time.sleep(0.1)
+        # 0001 - 右侧偏移修正
+        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
+              TrackSensorRightValue1 == False and TrackSensorRightValue2 == True):
+            print("右侧偏移修正 (0001)")
+            left(85, 100)
+            time.sleep(0.1)
+            
+        # 1000 - 左侧偏移修正
+        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == False and 
+              TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
+            print("左侧偏移修正 (1000)")
+            right(100, 85)
+            time.sleep(0.1)
             
         # 0000 - 全部检测到黑线，可能是交叉路口或起始点
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
