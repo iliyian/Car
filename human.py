@@ -184,5 +184,16 @@ def brake():
     GPIO.output(IN4, GPIO.LOW)
     
 if __name__ == "__main__":
+  try:
     init()
     run(NORMAL_SPEED, NORMAL_SPEED)
+  except KeyboardInterrupt:
+    print("程序被用户中断")
+  finally:
+    print("停止所有电机")
+    brake()
+    print("停止PWM输出")
+    pwm_ENA.stop()
+    pwm_ENB.stop()
+    print("清理GPIO")
+    GPIO.cleanup()
