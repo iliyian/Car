@@ -214,14 +214,7 @@ try:
             print("全线检测 (0000) - 交叉路口或起始点")
             run(20, 20)  # 继续前进
             time.sleep(0.1)
-            
-        # 1111 - 全部检测到白线，脱离轨道
-        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
-              TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
-            print("脱离轨道 (1111) - 寻找线路")
-            # 可以添加寻线逻辑，这里暂时停止
-            brake()
-            time.sleep(0.1)
+
             
         # 其他情况的处理
         else:
