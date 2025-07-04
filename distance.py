@@ -49,7 +49,7 @@ def distance():
     time.sleep(0.01)
     
     # 计算距离 (cm)
-    distance_cm = ((t2 - t1) * 340 / 2) * 100
+    distance_cm = ((t2 - t1) * SPEED_OF_SOUND / 2) * 100
     return distance_cm
 
 def distance_test():
