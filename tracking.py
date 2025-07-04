@@ -21,6 +21,17 @@ TrackSensorLeftPin2  =  5   #定义左边第二个循迹红外传感器引脚为
 TrackSensorRightPin1 =  4   #定义右边第一个循迹红外传感器引脚为4口
 TrackSensorRightPin2 =  18  #定义右边第二个循迹红外传感器引脚为18口
 
+#超声波引脚定义
+EchoPin = 0
+TrigPin = 1
+
+#避障距离阈值设置
+OBSTACLE_DISTANCE = 30  # 障碍物距离阈值（厘米）
+SAFE_DISTANCE = 50      # 安全距离阈值（厘米）
+
+#环境温度设置（用于声速计算）
+ENVIRONMENT_TEMPERATURE = 25  # 环境温度（摄氏度）
+
 #设置GPIO口为BCM编码方式
 GPIO.setmode(GPIO.BCM)
 
@@ -30,6 +41,7 @@ GPIO.setwarnings(False)
 #电机引脚初始化为输出模式
 #按键引脚初始化为输入模式
 #寻迹引脚初始化为输入模式
+#超声波引脚初始化
 def init():
     global pwm_ENA
     global pwm_ENB
@@ -44,12 +56,139 @@ def init():
     GPIO.setup(TrackSensorLeftPin2,GPIO.IN)
     GPIO.setup(TrackSensorRightPin1,GPIO.IN)
     GPIO.setup(TrackSensorRightPin2,GPIO.IN)
+    GPIO.setup(EchoPin,GPIO.IN)
+    GPIO.setup(TrigPin,GPIO.OUT)
     #设置pwm引脚和频率为2000hz
     pwm_ENA = GPIO.PWM(ENA, 2000)
     pwm_ENB = GPIO.PWM(ENB, 2000)
     pwm_ENA.start(0)
     pwm_ENB.start(0)
-	
+
+#声速计算函数（根据温度）
+def calculate_sound_speed(temperature):
+    """
+    根据温度计算声速
+    声速 = 331.4 + 0.6 × 温度(℃)
+    参数: temperature - 温度（摄氏度）
+    返回: 声速（米/秒）
+    """
+    return 331.4 + 0.6 * temperature
+
+#超声波测距函数（支持温度补偿）
+def Distance(temperature=25):
+    """
+    超声波测距函数
+    参数: temperature - 环境温度（摄氏度），默认25度
+    返回: 距离（厘米）
+    """
+    # 根据温度计算声速
+    sound_speed = calculate_sound_speed(temperature)
+    
+    GPIO.output(TrigPin,GPIO.LOW)
+    time.sleep(0.000002)
+    GPIO.output(TrigPin,GPIO.HIGH)
+    time.sleep(0.000015)
+    GPIO.output(TrigPin,GPIO.LOW)
+
+    t3 = time.time()
+
+    while not GPIO.input(EchoPin):
+        t4 = time.time()
+        if (t4 - t3) > 0.03 :
+            return -1
+
+    t1 = time.time()
+    while GPIO.input(EchoPin):
+        t5 = time.time()
+        if(t5 - t1) > 0.03 :
+            return -1
+
+    t2 = time.time()
+    time.sleep(0.01)
+    
+    # 使用动态计算的声速
+    distance = ((t2 - t1) * sound_speed / 2) * 100
+    return distance
+
+#超声波测距测试函数（多次测量取平均值，支持温度补偿）
+def Distance_test(temperature=25):
+    """
+    超声波测距测试函数
+    参数: temperature - 环境温度（摄氏度），默认25度
+    返回: 平均距离（厘米）
+    """
+    num = 0
+    ultrasonic = []
+    while num < 3:  # 减少测量次数以提高响应速度
+        distance = Distance(temperature)
+        while int(distance) == -1 :
+            distance = Distance(temperature)
+        while (int(distance) >= 500 or int(distance) == 0) :
+            distance = Distance(temperature)
+        ultrasonic.append(distance)
+        num = num + 1
+        time.sleep(0.01)
+    distance = sum(ultrasonic) / len(ultrasonic)
+    return distance
+
+#绕行函数
+def avoid_obstacle():
+    print("检测到障碍物，开始硬编码绕行...")
+    
+    # 停止前进
+    brake()
+    time.sleep(0.1)
+    
+    # 后退一小段距离
+    back(30, 30)
+    time.sleep(0.3)
+    brake()
+    
+    # 硬编码绕行动作序列
+    # 1. 原地右转90度
+    print("步骤1: 原地右转90度")
+    spin_right(40, 40)
+    time.sleep(0.5)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 2. 前进一段距离绕过障碍物
+    print("步骤2: 前进绕过障碍物")
+    run(35, 35)
+    time.sleep(1.0)  # 前进1秒
+    brake()
+    time.sleep(0.1)
+    
+    # 3. 原地左转90度
+    print("步骤3: 原地左转90度")
+    spin_left(40, 40)
+    time.sleep(0.5)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 4. 前进回到原路径
+    print("步骤4: 前进回到原路径")
+    run(35, 35)
+    time.sleep(0.8)  # 前进0.8秒
+    brake()
+    time.sleep(0.1)
+    
+    # 5. 原地左转90度
+    print("步骤5: 原地左转90度")
+    spin_left(40, 40)
+    time.sleep(0.5)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 6. 前进回到循迹线
+    print("步骤6: 前进回到循迹线")
+    run(35, 35)
+    time.sleep(0.5)  # 前进0.5秒
+    brake()
+    
+    print("硬编码绕行完成，继续循迹")
+    return True
+
 #小车前进	
 def run(leftspeed, rightspeed):
     GPIO.output(IN1, GPIO.HIGH)
@@ -173,14 +312,21 @@ def get_tracking_action(L1, L2, R1, R2):
 time.sleep(2)
 
 print("=" * 50)
-print("循迹测试程序启动")
+print("循迹避障测试程序启动")
 print("=" * 50)
 print("硬件配置:")
 print("   • 电机引脚: IN1={}, IN2={}, IN3={}, IN4={}".format(IN1, IN2, IN3, IN4))
 print("   • PWM引脚: ENA={}, ENB={}".format(ENA, ENB))
 print("   • 循迹传感器: L1={}, L2={}, R1={}, R2={}".format(
     TrackSensorLeftPin1, TrackSensorLeftPin2, TrackSensorRightPin1, TrackSensorRightPin2))
+print("   • 超声波传感器: Echo={}, Trig={}".format(EchoPin, TrigPin))
 print("   • 按键引脚: {}".format(key))
+print("=" * 50)
+print("避障设置:")
+print("   • 障碍物距离阈值: {} cm".format(OBSTACLE_DISTANCE))
+print("   • 安全距离阈值: {} cm".format(SAFE_DISTANCE))
+print("   • 环境温度: {}°C".format(ENVIRONMENT_TEMPERATURE))
+print("   • 计算声速: {:.1f} m/s".format(calculate_sound_speed(ENVIRONMENT_TEMPERATURE)))
 print("=" * 50)
 print("传感器状态说明:")
 print("   • 0 = 检测到黑线")
@@ -196,10 +342,28 @@ cnt = 0
 try:
     init()
     print("硬件初始化完成")
-    print("开始循迹测试...")
+    print("开始循迹避障测试...")
     print("-" * 50)
     
     while True:
+        # 超声波测距检测（使用温度补偿）
+        distance = Distance_test(ENVIRONMENT_TEMPERATURE)
+        sound_speed = calculate_sound_speed(ENVIRONMENT_TEMPERATURE)
+        print("前方距离: {:.1f} cm (声速: {:.1f} m/s, 温度: {}°C)".format(
+            distance, sound_speed, ENVIRONMENT_TEMPERATURE), end=" | ")
+        
+        # 如果检测到障碍物，执行绕行
+        if distance < OBSTACLE_DISTANCE:
+            print("检测到障碍物！")
+            if avoid_obstacle():
+                continue  # 绕行成功，继续循迹
+            else:
+                # 绕行失败，等待障碍物移除
+                while Distance_test(ENVIRONMENT_TEMPERATURE) < OBSTACLE_DISTANCE:
+                    time.sleep(0.5)
+                print("障碍物已移除，继续循迹")
+                continue
+        
         #检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
         #未检测到黑线时循迹模块相应的指示灯灭，端口电平为HIGH
         TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
