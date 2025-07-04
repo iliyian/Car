@@ -371,10 +371,10 @@ try:
         TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
         TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
         
-        # 显示传感器状态
-        sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{}".format(
+        # 显示传感器状态和测距结果
+        sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{} | 测距: {:.1f}cm".format(
             TrackSensorLeftValue1, TrackSensorLeftValue2, 
-            TrackSensorRightValue1, TrackSensorRightValue2)
+            TrackSensorRightValue1, TrackSensorRightValue2, distance)
         print(sensor_status, end=" | ")
         
         # 特殊标识处理
