@@ -33,7 +33,7 @@ while True:
                     max_score = score
                     best_match = i
 
-            if max_score > 0.7:  # 置信度阈值1
+            if max_score > 0.7:  # 置信度阈值
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 cv2.putText(frame, str(best_match), (x, y-10),
                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
