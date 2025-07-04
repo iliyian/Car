@@ -171,7 +171,7 @@ try:
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
             TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
             print("双线S型右小弯 (0111)")
-            right(25, 15)  # 右转，左轮快右轮慢
+            right(65, 45)  # 右转，左轮快右轮慢
             time.sleep(0.05)
             
         # 1110 - 向左小弯 (右边第一个传感器检测到黑线，其他都是白线)
