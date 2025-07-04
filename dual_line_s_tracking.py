@@ -208,7 +208,7 @@ try:
             run(22, 22)
             
             
-        # 0000 - 全部检测到黑线，可能是交叉路口或起始点1
+        # 0000 - 全部检测到黑线，可能是交叉路口或起始点
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
             print("全线检测 (0000) - 交叉路口或起始点")
