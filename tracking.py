@@ -137,6 +137,8 @@ try:
         TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
         TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
         TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
+        
+        print(TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2)
 
         #四路循迹引脚电平状态
         # 0 0 X 0
