@@ -38,10 +38,13 @@ class CameraController:
         self.recording = False
         self.out = None
         
+        # 舵机角度偏移量（用于校正）
+        self.updown_offset = -15  # 上下舵机偏移量，硬编码为-15度
+        
         # 舵机状态和位置变量
         self.g_ServoState = 0                # 舵机状态
-        self.ServoUpDownPos = 90             # 当前上下舵机角度
-        self.ServoLeftRightPos = 90          # 当前左右舵机角度
+        self.ServoUpDownPos = 90             # 当前上下舵机角度（显示角度）
+        self.ServoLeftRightPos = 90          # 当前左右舵机角度（显示角度）
         
         # 初始化舵机
         self.init_servo()
@@ -52,6 +55,7 @@ class CameraController:
         print("摄像头控制器初始化完成")
         print(f"保存路径: {save_path}")
         print(f"摄像头设备ID: {camera_id}")
+        print(f"上下舵机偏移量: {self.updown_offset}°")
     
     def init_servo(self):
         """初始化舵机"""
@@ -75,15 +79,18 @@ class CameraController:
         摄像头舵机上下旋转到指定角度
         :param pos: 角度 (0-180)
         """
-        # 限制角度范围
-        pos = max(0, min(180, pos))
+        # 应用偏移量校正
+        actual_pos = pos + self.updown_offset
+        
+        # 限制实际角度范围
+        actual_pos = max(0, min(180, actual_pos))
         
         for i in range(1):
-            self.pwm_UpDownServo.ChangeDutyCycle(2.5 + 10 * pos/180)
+            self.pwm_UpDownServo.ChangeDutyCycle(2.5 + 10 * actual_pos/180)
             time.sleep(0.02)  # 等待20ms周期结束
         
-        self.ServoUpDownPos = pos
-        print(f"摄像头上下角度已设置: {pos}°")
+        self.ServoUpDownPos = pos  # 保存显示角度
+        print(f"摄像头上下角度已设置: {pos}° (实际: {actual_pos}°)")
     
     def leftrightservo_appointed_detection(self, pos):
         """
@@ -270,70 +277,179 @@ class CameraController:
         print("录像已停止")
         return True
     
-    def live_preview(self):
-        """实时预览"""
+    def live_preview(self, headless=False):
+        """
+        实时预览
+        :param headless: 是否为无头模式（无图形界面）
+        """
         if not self.init_camera():
             return
         
-        print("开始实时预览...")
-        print("按键说明:")
-        print("  空格键: 拍照")
-        print("  'r': 开始/停止录像")
-        print("  'w': 摄像头向上")
-        print("  's': 摄像头向下")
-        print("  'a': 摄像头向左")
-        print("  'd': 摄像头向右")
-        print("  'c': 摄像头居中")
-        print("  'q': 退出")
+        if headless:
+            print("开始无头模式预览...")
+            print("按键说明:")
+            print("  Enter: 拍照")
+            print("  'r': 开始/停止录像")
+            print("  'w': 摄像头向上")
+            print("  's': 摄像头向下")
+            print("  'a': 摄像头向左")
+            print("  'd': 摄像头向右")
+            print("  'c': 摄像头居中")
+            print("  'q': 退出")
+            
+            self._headless_preview()
+        else:
+            print("开始实时预览...")
+            print("按键说明:")
+            print("  空格键: 拍照")
+            print("  'r': 开始/停止录像")
+            print("  'w': 摄像头向上")
+            print("  's': 摄像头向下")
+            print("  'a': 摄像头向左")
+            print("  'd': 摄像头向右")
+            print("  'c': 摄像头居中")
+            print("  'q': 退出")
+            
+            self._gui_preview()
+    
+    def _headless_preview(self):
+        """无头模式预览"""
+        import threading
+        import sys
+        import select
         
-        while True:
-            ret, frame = self.cap.read()
-            if not ret:
-                print("无法获取摄像头画面")
-                break
-            
-            # 在画面上显示信息
-            info_text = f"角度: 上下={self.ServoUpDownPos}° 左右={self.ServoLeftRightPos}°"
-            cv2.putText(frame, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-            
-            if self.recording:
-                cv2.putText(frame, "录像中...", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                if self.out:
+        self.preview_running = True
+        frame_count = 0
+        
+        def input_thread():
+            while self.preview_running:
+                try:
+                    if sys.stdin in select.select([sys.stdin], [], [], 0.1)[0]:
+                        key = sys.stdin.readline().strip().lower()
+                        self._process_command(key)
+                except:
+                    pass
+        
+        # 启动输入线程
+        input_handler = threading.Thread(target=input_thread)
+        input_handler.daemon = True
+        input_handler.start()
+        
+        print("摄像头预览已启动（无图形界面模式）")
+        print("输入命令后按Enter执行...")
+        
+        try:
+            while self.preview_running:
+                ret, frame = self.cap.read()
+                if not ret:
+                    print("无法获取摄像头画面")
+                    break
+                
+                # 录像处理
+                if self.recording and self.out:
                     self.out.write(frame)
-            
-            # 显示画面
-            cv2.imshow('摄像头预览', frame)
-            
-            # 处理按键
-            key = cv2.waitKey(1) & 0xFF
-            
-            if key == ord('q'):
-                break
-            elif key == ord(' '):  # 空格键拍照
-                self.take_photo()
-            elif key == ord('r'):  # 录像开关
-                if self.recording:
-                    self.stop_recording()
-                else:
-                    self.start_recording()
-            elif key == ord('w'):  # 向上
-                self.set_servo_state(enSERVOUP)
-            elif key == ord('s'):  # 向下
-                self.set_servo_state(enSERVODOWN)
-            elif key == ord('a'):  # 向左
-                self.set_servo_state(enSERVOLEFT)
-            elif key == ord('d'):  # 向右
-                self.set_servo_state(enSERVORIGHT)
-            elif key == ord('c'):  # 居中
-                self.set_servo_state(enSERVOUPDOWNINIT)
+                
+                # 每100帧显示一次状态
+                frame_count += 1
+                if frame_count % 100 == 0:
+                    status = "录像中" if self.recording else "预览中"
+                    print(f"状态: {status} | 角度: 上下={self.ServoUpDownPos}° 左右={self.ServoLeftRightPos}° | 帧数: {frame_count}")
+                
+                time.sleep(0.03)  # 约30fps
+                
+        except KeyboardInterrupt:
+            print("\n预览被中断")
+        
+        self.preview_running = False
         
         # 清理资源
         if self.recording:
             self.stop_recording()
         
         self.cap.release()
-        cv2.destroyAllWindows()
-        print("实时预览已退出")
+        print("无头模式预览已退出")
+    
+    def _gui_preview(self):
+        """图形界面预览"""
+        try:
+            while True:
+                ret, frame = self.cap.read()
+                if not ret:
+                    print("无法获取摄像头画面")
+                    break
+                
+                # 在画面上显示信息
+                info_text = f"角度: 上下={self.ServoUpDownPos}° 左右={self.ServoLeftRightPos}°"
+                cv2.putText(frame, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                
+                if self.recording:
+                    cv2.putText(frame, "录像中...", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    if self.out:
+                        self.out.write(frame)
+                
+                # 显示画面
+                cv2.imshow('摄像头预览', frame)
+                
+                # 处理按键
+                key = cv2.waitKey(1) & 0xFF
+                
+                if key == ord('q'):
+                    break
+                elif key == ord(' '):  # 空格键拍照
+                    self.take_photo()
+                elif key == ord('r'):  # 录像开关
+                    if self.recording:
+                        self.stop_recording()
+                    else:
+                        self.start_recording()
+                elif key == ord('w'):  # 向上
+                    self.set_servo_state(enSERVOUP)
+                elif key == ord('s'):  # 向下
+                    self.set_servo_state(enSERVODOWN)
+                elif key == ord('a'):  # 向左
+                    self.set_servo_state(enSERVOLEFT)
+                elif key == ord('d'):  # 向右
+                    self.set_servo_state(enSERVORIGHT)
+                elif key == ord('c'):  # 居中
+                    self.set_servo_state(enSERVOUPDOWNINIT)
+            
+            # 清理资源
+            if self.recording:
+                self.stop_recording()
+            
+            self.cap.release()
+            cv2.destroyAllWindows()
+            print("实时预览已退出")
+            
+        except Exception as e:
+            print(f"图形界面预览出错: {e}")
+            print("尝试使用无头模式...")
+            self._headless_preview()
+    
+    def _process_command(self, cmd):
+        """处理命令"""
+        if cmd == 'q':
+            self.preview_running = False
+            print("退出预览...")
+        elif cmd == '' or cmd == 'enter':  # Enter键拍照
+            self.take_photo()
+        elif cmd == 'r':  # 录像开关
+            if self.recording:
+                self.stop_recording()
+            else:
+                self.start_recording()
+        elif cmd == 'w':  # 向上
+            self.set_servo_state(enSERVOUP)
+        elif cmd == 's':  # 向下
+            self.set_servo_state(enSERVODOWN)
+        elif cmd == 'a':  # 向左
+            self.set_servo_state(enSERVOLEFT)
+        elif cmd == 'd':  # 向右
+            self.set_servo_state(enSERVORIGHT)
+        elif cmd == 'c':  # 居中
+            self.set_servo_state(enSERVOUPDOWNINIT)
+        else:
+            print(f"未知命令: {cmd}")
     
     def scan_mode(self):
         """扫描模式 - 摄像头自动旋转扫描"""
@@ -419,28 +535,31 @@ def main():
     try:
         while True:
             print("\n请选择功能:")
-            print("1. 实时预览")
-            print("2. 拍照")
-            print("3. 扫描模式")
-            print("4. 全景模式")
-            print("5. 设置摄像头角度")
-            print("6. 舵机归位")
-            print("7. 测试舵机控制")
-            print("8. 退出")
+            print("1. 实时预览（图形界面）")
+            print("2. 实时预览（无头模式）")
+            print("3. 拍照")
+            print("4. 扫描模式")
+            print("5. 全景模式")
+            print("6. 设置摄像头角度")
+            print("7. 舵机归位")
+            print("8. 测试舵机控制")
+            print("9. 退出")
             
-            choice = input("请输入选项 (1-8): ").strip()
+            choice = input("请输入选项 (1-9): ").strip()
             
             if choice == '1':
-                camera.live_preview()
+                camera.live_preview(headless=False)
             elif choice == '2':
+                camera.live_preview(headless=True)
+            elif choice == '3':
                 if camera.init_camera():
                     camera.take_photo()
                     camera.cap.release()
-            elif choice == '3':
-                camera.scan_mode()
             elif choice == '4':
-                camera.panorama_mode()
+                camera.scan_mode()
             elif choice == '5':
+                camera.panorama_mode()
+            elif choice == '6':
                 try:
                     updown = int(input("请输入上下角度 (45-180): "))
                     leftright = int(input("请输入左右角度 (0-180): "))
@@ -448,9 +567,9 @@ def main():
                     camera.leftrightservo_appointed_detection(leftright)
                 except ValueError:
                     print("请输入有效的数字")
-            elif choice == '6':
-                camera.set_servo_state(enSERVOUPDOWNINIT)
             elif choice == '7':
+                camera.set_servo_state(enSERVOUPDOWNINIT)
+            elif choice == '8':
                 # 测试舵机控制状态机
                 print("测试舵机控制...")
                 print("1-上, 2-下, 3-左, 4-右, 5-归位, 6-停止")
@@ -467,7 +586,7 @@ def main():
                     camera.set_servo_state(enSERVOUPDOWNINIT)
                 elif test_choice == '6':
                     camera.set_servo_state(enSERVOSTOP)
-            elif choice == '8':
+            elif choice == '9':
                 break
             else:
                 print("无效选项，请重新输入")
