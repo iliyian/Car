@@ -212,7 +212,7 @@ try:
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
             print("全线检测 (0000) - 交叉路口或起始点")
-            run(20, 20)  # 继续前进
+            break  # 停止
             time.sleep(0.1)
 
             
