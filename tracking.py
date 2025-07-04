@@ -186,7 +186,7 @@ try:
         # X 0 0 X
         #处理直线
         elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False:
-	        run(35, 35)
+	        run(20, 20)
    
         #当为1 1 1 1时小车保持上一个小车运行状态
        
