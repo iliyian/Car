@@ -85,9 +85,15 @@ class CameraController:
         # 限制实际角度范围
         actual_pos = max(0, min(180, actual_pos))
         
-        for i in range(1):
-            self.pwm_UpDownServo.ChangeDutyCycle(0 + 10 * actual_pos/180)
-            time.sleep(0.02)  # 等待20ms周期结束
+        # 计算占空比
+        duty_cycle = 2.5 + 10 * actual_pos/180
+        
+        # 设置PWM信号
+        self.pwm_UpDownServo.ChangeDutyCycle(duty_cycle)
+        time.sleep(0.5)  # 等待舵机转到位置
+        
+        # 停止PWM信号防止抖动
+        self.pwm_UpDownServo.ChangeDutyCycle(0)
         
         self.ServoUpDownPos = pos  # 保存显示角度
         print(f"摄像头上下角度已设置: {pos}° (实际: {actual_pos}°)")
@@ -100,9 +106,15 @@ class CameraController:
         # 限制角度范围
         pos = max(0, min(180, pos))
         
-        for i in range(1):
-            self.pwm_LeftRightServo.ChangeDutyCycle(2.5 + 10 * pos/180)
-            time.sleep(0.02)  # 等待20ms周期结束
+        # 计算占空比
+        duty_cycle = 2.5 + 10 * pos/180
+        
+        # 设置PWM信号
+        self.pwm_LeftRightServo.ChangeDutyCycle(duty_cycle)
+        time.sleep(0.5)  # 等待舵机转到位置
+        
+        # 停止PWM信号防止抖动
+        self.pwm_LeftRightServo.ChangeDutyCycle(0)
         
         self.ServoLeftRightPos = pos
         print(f"摄像头左右角度已设置: {pos}°")
@@ -151,14 +163,20 @@ class CameraController:
     def servo_init(self):
         """所有舵机归位"""
         servo_init_pos = 90
-        self.updownservo_appointed_detection(servo_init_pos)
-        self.leftrightservo_appointed_detection(servo_init_pos)
-        self.ServoUpDownPos = servo_init_pos
-        self.ServoLeftRightPos = servo_init_pos
-        time.sleep(0.5)
-        # 归零信号
+        
+        # 先停止所有PWM信号
         self.pwm_UpDownServo.ChangeDutyCycle(0)
         self.pwm_LeftRightServo.ChangeDutyCycle(0)
+        time.sleep(0.1)
+        
+        # 设置到中心位置
+        self.updownservo_appointed_detection(servo_init_pos)
+        self.leftrightservo_appointed_detection(servo_init_pos)
+        
+        # 更新位置变量
+        self.ServoUpDownPos = servo_init_pos
+        self.ServoLeftRightPos = servo_init_pos
+        
         print("摄像头舵机已归位到中心位置")
     
     def servo_stop(self):
