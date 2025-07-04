@@ -154,13 +154,9 @@ try:
         
         # 双线S型过弯的核心逻辑
         if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
-            if cnt == 0:
-                run(20, 20)
-            else:
-                brake()
+            print("左锐角/直角转弯")
+            spin_left(30, 35)
             time.sleep(0.1)
-            cnt += 1
-            continue
 
         #四路循迹引脚电平状态
         # 0 0 X 0
