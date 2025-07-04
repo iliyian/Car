@@ -196,18 +196,20 @@ try:
             time.sleep(0.05)
             
         # 0011 - 双线直行 (两个中间传感器检测到黑线)
-        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
-              TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
-            print("双线直行 (0011)")
-            run(10, 10)
-            time.sleep(0.05)
-            
-        # 1100 - 双线直行 (两个中间传感器检测到黑线)
-        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
-              TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
-            print("双线直行 (1100)")
-            run(10, 10)
-            time.sleep(0.05)
+        # elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
+        #       TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
+        #     # print("双线直行 (0011)")
+        #     # run(10, 10)
+        #     right(65, 45)
+        #     time.sleep(0.05)
+        #     
+        # # 1100 - 双线直行 (两个中间传感器检测到黑线)
+        # elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
+        #       TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
+        #     # print("双线直行 (1100)")
+        #     # run(10, 10)
+        #     left(65, 45)
+        #     time.sleep(0.05)
             
         # 0110 - 双线直行 (两个中间传感器检测到黑线)
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
@@ -223,25 +225,26 @@ try:
             run(10, 10)
             time.sleep(0.05)
             
-        # 0001 - 右侧偏移修正
-        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
-              TrackSensorRightValue1 == False and TrackSensorRightValue2 == True):
-            print("右侧偏移修正 (0001)")
-            left(38, 65)
-            time.sleep(0.05)
-            
-        # 1000 - 左侧偏移修正
-        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == False and 
-              TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
-            print("左侧偏移修正 (1000)")
-            right(65, 38)
-            time.sleep(0.05)
+        # # 0001 - 右侧偏移修正
+        # elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
+        #       TrackSensorRightValue1 == False and TrackSensorRightValue2 == True):
+        #     print("右侧偏移修正 (0001)")
+        #     left(38, 65)
+        #     time.sleep(0.05)
+        #     
+        # # 1000 - 左侧偏移修正
+        # elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == False and 
+        #       TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
+        #     print("左侧偏移修正 (1000)")
+        #     right(65, 38)
+        #     time.sleep(0.05)
             
         # 0000 - 全部检测到黑线，可能是交叉路口或起始点
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
             print("全线检测 (0000) - 交叉路口或起始点")
-            run(10, 10)  # 继续前进
+            # run(10, 10)  # 继续前进
+            brake()
             time.sleep(0.1)
             
         # 1111 - 全部检测到白线，脱离轨道
