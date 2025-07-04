@@ -186,7 +186,9 @@ def brake():
 if __name__ == "__main__":
   try:
     init()
-    run(NORMAL_SPEED, NORMAL_SPEED)
+    while True:
+      run(NORMAL_SPEED, NORMAL_SPEED)
+      time.sleep(0.02)
   except KeyboardInterrupt:
     print("程序被用户中断")
   finally:
