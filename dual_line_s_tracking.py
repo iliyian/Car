@@ -163,7 +163,7 @@ try:
         print(sensor_status, end=" | ")
         
         if TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and TrackSensorRightValue1 == True and TrackSensorRightValue2 == True:
-            run(20, 20)
+            run(40, 40)
             time.sleep(0.05)
         
         # 双线S型过弯的核心逻辑
@@ -199,7 +199,7 @@ try:
         # elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
         #       TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
         #     # print("双线直行 (0011)")
-        #     # run(10, 20)
+        #     # run(10, 40)
         #     right(65, 45)
         #     time.sleep(0.05)
         #     
@@ -207,7 +207,7 @@ try:
         # elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
         #       TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
         #     # print("双线直行 (1100)")
-        #     # run(10, 20)
+        #     # run(10, 40)
         #     left(65, 45)
         #     time.sleep(0.05)
             
@@ -215,14 +215,14 @@ try:
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
               TrackSensorRightValue1 == True and TrackSensorRightValue2 == False):
             print("双线直行 (0110)")
-            run(20, 20)
+            run(40, 40)
             time.sleep(0.05)
             
         # 1001 - 双线直行 (两个外侧传感器检测到黑线)
         elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == True):
             print("双线直行 (1001)")
-            run(20, 20)
+            run(40, 40)
             time.sleep(0.05)
             
         # # 0001 - 右侧偏移修正
