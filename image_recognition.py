@@ -3,6 +3,7 @@ import base64
 import os
 import cv2
 import time
+import httpx
 
 # --- 配置 ---
 # 请将 "YOUR_OPENAI_API_KEY" 替换为您的 OpenAI API 密钥
@@ -13,12 +14,29 @@ API_KEY = "sk-or-v1-419dcb65830b9c04f034a62ff2588d49dba9899a87a8749c61dbd26e9f7a
 MODEL = "openai/gpt-4.1-mini"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
 BASE_URL = "https://openrouter.ai/api/v1"
+# 如果您需要通过HTTPS代理访问，请在此处设置代理地址，例如 "http://127.0.0.1:7890"
+# 如果不需要代理，请将其留空 ""
+HTTPS_PROXY = "http://192.168.194.67:10808"
 # 图片保存的文件夹
 IMGS_DIR = "imgs"
 
 # 初始化 OpenAI 客户端
+http_client = None
+if HTTPS_PROXY:
+    print(f"正在使用代理: {HTTPS_PROXY}")
+    proxies = {
+        "http://": HTTPS_PROXY,
+        "https://": HTTPS_PROXY,
+    }
+    # 使用代理创建 httpx 客户端
+    http_client = httpx.Client(proxies=proxies)
+
 # 如果您已经设置了 OPENAI_API_KEY 环境变量，则无需传递 api_key 参数
-client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
+client = openai.OpenAI(
+    api_key=API_KEY,
+    base_url=BASE_URL,
+    http_client=http_client # 将配置好的客户端传递给 OpenAI
+)
 
 def capture_image_from_camera(save_dir):
     """
