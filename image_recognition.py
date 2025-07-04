@@ -6,10 +6,9 @@ import time
 import httpx
 
 # --- 配置 ---
-# 请将 "YOUR_OPENAI_API_KEY" 替换为您的 OpenAI API 密钥
-# 强烈建议使用环境变量来设置您的 API 密钥，以避免泄露。
-# 例如: os.environ.get("OPENAI_API_KEY")
-API_KEY = "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" 
+# API 密钥将从环境变量 "OPENAI_API_KEY" 中读取，以提高安全性。
+# 在运行脚本前，请先设置该环境变量。
+API_KEY = os.environ.get("OPENAI_API_KEY") 
 # 您想要使用的模型
 MODEL = "openai/gpt-4.1-mini"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
@@ -33,7 +32,6 @@ if HTTPS_PROXY:
 
 # 如果您已经设置了 OPENAI_API_KEY 环境变量，则无需传递 api_key 参数
 client = openai.OpenAI(
-    api_key=API_KEY,
     base_url=BASE_URL,
     http_client=http_client # 将配置好的客户端传递给 OpenAI
 )
@@ -147,8 +145,10 @@ def recognize_image_content(image_path, prompt="这张图片里有什么？请�
     return None
 
 if __name__ == "__main__":
-    if API_KEY == "YOUR_OPENAI_API_KEY":
-        print("错误：请在代码中设置您的 OpenAI API 密钥 (API_KEY)。")
+    if not API_KEY:
+        print("错误：未设置 OPENAI_API_KEY 环境变量。")
+        print("请在运行脚本前设置该变量，例如：")
+        print("export OPENAI_API_KEY='你的API密钥'")
     else:
         # 1. 拍照
         image_to_recognize = capture_image_from_camera(IMGS_DIR)
