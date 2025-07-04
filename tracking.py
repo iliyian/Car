@@ -119,8 +119,8 @@ def key_scan():
         time.sleep(0.01)
         if not GPIO.input(key):
             time.sleep(0.01)
-	    while not GPIO.input(key):
-	        pass
+        while not GPIO.input(key):
+            pass
 
 #延时2s	
 time.sleep(2)
@@ -146,7 +146,7 @@ try:
         #处理右锐角和右直角的转动
         if (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and  TrackSensorRightValue2 == False:
            spin_right(35, 30)
-	   time.sleep(0.1)
+        time.sleep(0.1)
  
         #四路循迹引脚电平状态
         # 0 X 0 0       
@@ -154,36 +154,36 @@ try:
         # 0 X 1 0       
         #处理左锐角和左直角的转动
         elif TrackSensorLeftValue1 == False and (TrackSensorRightValue1 == False or  TrackSensorRightValue2 == False):
-           spin_left(30,35 )
-	   time.sleep(0.1)
+            spin_left(30,35 )
+        time.sleep(0.1)
   
         # 0 X X X
         #最左边检测到
         elif TrackSensorLeftValue1 == False:
-           spin_left(30, 30)
+            spin_left(30, 30)
      
         # X X X 0
         #最右边检测到
         elif TrackSensorRightValue2 == False:
-           spin_right(30, 30)
+            spin_right(30, 30)
    
         #四路循迹引脚电平状态
         # X 0 1 X
         #处理左小弯
         elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == True:
-           left(0,35)
+            left(0,35)
    
         #四路循迹引脚电平状态
         # X 1 0 X  
         #处理右小弯
         elif TrackSensorLeftValue2 == True and TrackSensorRightValue1 == False:
-           right(35, 0)
+            right(35, 0)
    
         #四路循迹引脚电平状态
         # X 0 0 X
         #处理直线
         elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False:
-	   run(35, 35)
+	        run(35, 35)
    
         #当为1 1 1 1时小车保持上一个小车运行状态
        
