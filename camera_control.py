@@ -86,7 +86,7 @@ class CameraController:
         actual_pos = max(0, min(180, actual_pos))
         
         for i in range(1):
-            self.pwm_UpDownServo.ChangeDutyCycle(2.5 + 10 * actual_pos/180)
+            self.pwm_UpDownServo.ChangeDutyCycle(0 + 10 * actual_pos/180)
             time.sleep(0.02)  # 等待20ms周期结束
         
         self.ServoUpDownPos = pos  # 保存显示角度
