@@ -1,6 +1,8 @@
 import openai
 import base64
 import os
+import cv2
+import time
 
 # --- 配置 ---
 # 请将 "YOUR_OPENAI_API_KEY" 替换为您的 OpenAI API 密钥
@@ -9,12 +11,62 @@ import os
 API_KEY = "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" 
 # 您想要使用的模型
 MODEL = "openai/gpt-4.1-mini"
-# 您要识别的图片路径
-IMAGE_PATH = "path/to/your/image.jpg"
+# 图片保存的文件夹
+IMGS_DIR = "imgs"
 
 # 初始化 OpenAI 客户端
 # 如果您已经设置了 OPENAI_API_KEY 环境变量，则无需传递 api_key 参数
 client = openai.OpenAI(api_key=API_KEY)
+
+def capture_image_from_camera(save_dir):
+    """
+    调用摄像头拍照并保存图片。
+    
+    :param save_dir: 图片保存的目录。
+    :return: 保存的图片路径，如果失败则返回 None。
+    """
+    # 确保保存目录存在
+    if not os.path.exists(save_dir):
+        print(f"创建目录: {save_dir}")
+        os.makedirs(save_dir)
+        
+    # 0 代表系统默认的摄像头
+    cap = cv2.VideoCapture(0)
+    
+    if not cap.isOpened():
+        print("错误：无法打开摄像头。请检查摄像头是否连接并可用。")
+        return None
+        
+    print("摄像头已启动，3秒后拍照...")
+    time.sleep(1)
+    print("2...")
+    time.sleep(1)
+    print("1...")
+    time.sleep(1)
+    print("拍照！")
+
+    # 读取一帧
+    ret, frame = cap.read()
+    
+    if not ret:
+        print("错误：无法从摄像头捕获图像。")
+        cap.release()
+        return None
+        
+    # 生成文件名
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    image_name = f"capture_{timestamp}.jpg"
+    image_path = os.path.join(save_dir, image_name)
+    
+    # 保存图片
+    cv2.imwrite(image_path, frame)
+    print(f"图片已保存到: {image_path}")
+    
+    # 释放摄像头资源
+    cap.release()
+    cv2.destroyAllWindows()
+    
+    return image_path
 
 def encode_image_to_base64(image_path):
     """将图片文件编码为 Base64 字符串"""
@@ -77,10 +129,13 @@ def recognize_image_content(image_path, prompt="这张图片里有什么？请�
 if __name__ == "__main__":
     if API_KEY == "YOUR_OPENAI_API_KEY":
         print("错误：请在代码中设置您的 OpenAI API 密钥 (API_KEY)。")
-    elif not os.path.exists(IMAGE_PATH):
-         print(f"错误：图片文件不存在，请检查路径 '{IMAGE_PATH}' 是否正确。")
     else:
-        description = recognize_image_content(IMAGE_PATH)
-        if description:
-            print("\n--- 识别结果 ---")
-            print(description) 
+        # 1. 拍照
+        image_to_recognize = capture_image_from_camera(IMGS_DIR)
+        
+        # 2. 如果拍照成功，则进行识别
+        if image_to_recognize:
+            description = recognize_image_content(image_to_recognize)
+            if description:
+                print("\n--- 识别结果 ---")
+                print(description) 
