@@ -485,6 +485,7 @@ def handle_double_line():
     global current_state, double_line_count
     print("检测到双线，开始处理...")
     print("当前双线计数: {}".format(double_line_count))
+    print("注意：双线只在第二个特殊标记后才会被检测")
     
     # 直走直到识别到线
     print("直行寻找路线")
@@ -539,8 +540,8 @@ def tracking():
         else:
             print("第一个特殊标识，继续循迹")
     
-    # 检测双线
-    if detect_double_line():
+    # 检测双线（只在第二个特殊标记后检测）
+    if special_mark_count >= 2 and detect_double_line():
         double_line_count += 1
         print("检测到双线 #{}".format(double_line_count))
         current_state = STATE_DOUBLE_LINE
