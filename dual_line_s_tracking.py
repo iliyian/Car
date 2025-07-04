@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 import time
 
 #小车电机引脚定义
-IN1 = 20
+IN1 = 10
 IN2 = 21
 IN3 = 19
 IN4 = 26
@@ -44,9 +44,9 @@ def init():
     GPIO.setup(TrackSensorLeftPin2,GPIO.IN)
     GPIO.setup(TrackSensorRightPin1,GPIO.IN)
     GPIO.setup(TrackSensorRightPin2,GPIO.IN)
-    #设置pwm引脚和频率为2000hz
-    pwm_ENA = GPIO.PWM(ENA, 2000)
-    pwm_ENB = GPIO.PWM(ENB, 2000)
+    #设置pwm引脚和频率为1000hz
+    pwm_ENA = GPIO.PWM(ENA, 1000)
+    pwm_ENB = GPIO.PWM(ENB, 1000)
     pwm_ENA.start(0)
     pwm_ENB.start(0)
 
@@ -163,7 +163,7 @@ try:
         print(sensor_status, end=" | ")
         
         if TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and TrackSensorRightValue1 == True and TrackSensorRightValue2 == True:
-            run(20, 20)
+            run(10, 10)
             time.sleep(0.05)
         
         # 双线S型过弯的核心逻辑
@@ -199,28 +199,28 @@ try:
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == True and TrackSensorRightValue2 == True):
             print("双线直行 (0011)")
-            run(22, 22)
+            run(10, 10)
             time.sleep(0.05)
             
         # 1100 - 双线直行 (两个中间传感器检测到黑线)
         elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
             print("双线直行 (1100)")
-            run(22, 22)
+            run(10, 10)
             time.sleep(0.05)
             
         # 0110 - 双线直行 (两个中间传感器检测到黑线)
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == True and 
               TrackSensorRightValue1 == True and TrackSensorRightValue2 == False):
             print("双线直行 (0110)")
-            run(22, 22)
+            run(10, 10)
             time.sleep(0.05)
             
         # 1001 - 双线直行 (两个外侧传感器检测到黑线)
         elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == True):
             print("双线直行 (1001)")
-            run(22, 22)
+            run(10, 10)
             time.sleep(0.05)
             
         # 0001 - 右侧偏移修正
@@ -241,7 +241,7 @@ try:
         elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and 
               TrackSensorRightValue1 == False and TrackSensorRightValue2 == False):
             print("全线检测 (0000) - 交叉路口或起始点")
-            run(20, 20)  # 继续前进
+            run(10, 10)  # 继续前进
             time.sleep(0.1)
             
         # 1111 - 全部检测到白线，脱离轨道
