@@ -26,7 +26,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 class CameraController:
-    def __init__(self, camera_id=1, save_path='/home/pi/Desktop/'):
+    def __init__(self, camera_id=0, save_path='/home/pi/Desktop/'):
         """
         初始化摄像头控制器
         :param camera_id: 摄像头设备ID (默认1)
