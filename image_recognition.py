@@ -8,15 +8,17 @@ import time
 # 请将 "YOUR_OPENAI_API_KEY" 替换为您的 OpenAI API 密钥
 # 强烈建议使用环境变量来设置您的 API 密钥，以避免泄露。
 # 例如: os.environ.get("OPENAI_API_KEY")
-API_KEY = "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" 
+API_KEY = "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" 
 # 您想要使用的模型
 MODEL = "openai/gpt-4.1-mini"
+# API 地址, 如果您使用代理或第三方服务，请在此修改
+BASE_URL = "https://openrouter.ai/api/v1"
 # 图片保存的文件夹
 IMGS_DIR = "imgs"
 
 # 初始化 OpenAI 客户端
 # 如果您已经设置了 OPENAI_API_KEY 环境变量，则无需传递 api_key 参数
-client = openai.OpenAI(api_key=API_KEY)
+client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
 def capture_image_from_camera(save_dir):
     """
