@@ -128,21 +128,21 @@ def get_code():
     TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
     code = ''
     if TrackSensorLeftValue1:
-        code = code + '0'
-    else:
         code = code + '1'
+    else:
+        code = code + '0'
     if TrackSensorLeftValue2:
-        code = code + '0'
-    else:
         code = code + '1'
+    else:
+        code = code + '0'
     if TrackSensorRightValue1:
-        code = code + '0'
-    else:
         code = code + '1'
+    else:
+        code = code + '0'
     if TrackSensorRightValue2:
-        code = code + '0'
-    else:
         code = code + '1'
+    else:
+        code = code + '0'
     return code
 
 
@@ -172,21 +172,21 @@ class Status:
     def change_status(self, code):
         # print(self.status, ' ', code)
         if self.status == 0:
-            if code == '0001':  # 右侧出现黑线
+            if code == '1110':  # 右侧出现黑线
                 self.status = 1
-            if code == '1000':  # 左侧出现黑线
+            if code == '0111':  # 左侧出现黑线
                 self.status = 6
         elif self.status == 1:
-            if code == '0000':  # 右侧黑线消失
+            if code == '1111':  # 右侧黑线消失
                 self.count = 0
                 self.status = 0
-            if code == '0011' or code == '0010':  # 黑线的范围变大
+            if code == '1100' or code == '1101':  # 黑线的范围变大
                 self.count = 0
                 self.status = 3
-            if code == '0111' or code == '0110' or code == '0100':  # 黑线的范围变大
+            if code == '1000' or code == '1001' or code == '1011':  # 黑线的范围变大
                 self.count = 0
                 self.status = 4
-            if code == '0001':  # 黑线保持，计数器累加
+            if code == '1110':  # 黑线保持，计数器累加
                 self.count = self.count + 1
                 if self.count == check_time:
                     self.status = 2
@@ -197,14 +197,14 @@ class Status:
             self.count = 0
             self.status = 0
         elif self.status == 3:
-            if code == '0000':  # 黑线消失
+            if code == '1111':  # 黑线消失
                 self.status = 0
-            if code == '0111' or code == '0110' or code == '0100':  # 黑线左移
+            if code == '1000' or code == '1001' or code == '1011':  # 黑线左移
                 self.status = 4
         elif self.status == 4:
-            if code == '0000':  # 黑线消失
+            if code == '1111':  # 黑线消失
                 self.status = 0
-            if code == '1111' or code == '1110' or code == '1100' or code == '1000':  # 黑线完全左移，说明该左转了
+            if code == '0000' or code == '0001' or code == '0011' or code == '0111':  # 黑线完全左移，说明该左转了
                 self.status = 5
         elif self.status == 5:  # 左转
             spin_left(15, 15)
@@ -212,16 +212,16 @@ class Status:
             run(15, 15)
             self.status = 0
         elif self.status == 6:
-            if code == '0000':
+            if code == '1111':
                 self.count = 0
                 self.status = 0
-            if code == '1100' or code == '0100':
+            if code == '0011' or code == '1011':
                 self.count = 0
                 self.status = 8
-            if code == '1110' or code == '0110' or code == '0010':
+            if code == '0001' or code == '1001' or code == '1101':
                 self.count = 0
                 self.status = 9
-            if code == '1000':
+            if code == '0111':
                 self.count = self.count + 1
                 if self.count == check_time:
                     self.status = 7
@@ -232,27 +232,27 @@ class Status:
             self.count = 0
             self.status = 0
         elif self.status == 8:
-            if code == '0000':
+            if code == '1111':
                 self.status = 0
-            if code == '1110' or code == '0110' or code == '0010':
+            if code == '0001' or code == '1001' or code == '1101':
                 self.status = 9
         elif self.status == 9:
-            if code == '0000':
+            if code == '1111':
                 self.status = 0
-            if code == '1111' or code == '0111' or code == '0011' or code == '0001':
+            if code == '0000' or code == '1000' or code == '1100' or code == '1110':
                 self.status = 10
         elif self.status == 10:
             spin_right(15, 15)
             time.sleep(spin_time_long)
             run(15, 15)
             self.status = 0
-        if code == '1111' and self.flag == 0:  # 遇到黑线，计数器加一，等待下一条
+        if code == '0000' and self.flag == 0:  # 遇到黑线，计数器加一，等待下一条
             self.flag = 1
             self.black_line = self.black_line + 1
             brake()
             time.sleep(0.1)
             return 1
-        if code == '0000' and self.flag == 1:  # 只有遇到纯白，才会寻找下一条黑线
+        if code == '1111' and self.flag == 1:  # 只有遇到纯白，才会寻找下一条黑线
             run(15, 15)
             self.flag = 0
         return 0
