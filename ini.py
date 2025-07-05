@@ -217,7 +217,7 @@ def avoid_obstacle():
     # 5. 原地左转90度
     print("步骤5: 原地左转90度")
     spin_left(40, 40)
-    time.sleep(0.5)  # 调整时间以达到90度
+    time.sleep(0.405)  # 调整时间以达到90度
     brake()
     time.sleep(0.1)
     
@@ -341,6 +341,7 @@ try:
     
     search_line()
     avoid_obstacle()
+    search_line()
     
 
 
