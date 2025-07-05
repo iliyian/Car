@@ -853,14 +853,14 @@ try:
     # 实现方式：巡线模式
     search_line_only()
 
-    # 任务4：倒车入库
-    park()
-
-    # 任务5：避障
+    # 任务4：避障
     # 实现方式：先避障，再回到巡线模式
     search_line()
     avoid()
     search_line_only()
+
+    # 任务5：倒车入库
+    park()
 
     # 任务6：双线行驶，但在进入双线寻路循环前先行驶一段，驶离黑线
     #run(20, 20)
@@ -879,25 +879,26 @@ try:
     # 任务7：侧方停车
     # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
     parallel_parking()
+    search_line_only()
 
 
     # 任务8：再次人脸识别并提交考核成绩（发送邮件给考生）
-    while True:
-        for i in range(10):
-            set_camera_updown(180)
-            set_camera_leftright(90)
-            set_servo_angle(90)
-        time.sleep(0.5)
-        stop_camera_updown()
-        stop_camera_leftright()
-        stop_servo_angle()
-        key_scan()
-        if id_check():
-            whistle()
-            set_camera_updown(90)
-            stop_camera_updown()
-            upload()
-            break
+#     while True:
+#         for i in range(10):
+#             set_camera_updown(180)
+#             set_camera_leftright(90)
+#             set_servo_angle(90)
+#         time.sleep(0.5)
+#         stop_camera_updown()
+#         stop_camera_leftright()
+#         stop_servo_angle()
+#         key_scan()
+#         if id_check():
+#             whistle()
+#             set_camera_updown(90)
+#             stop_camera_updown()
+#             upload()
+#             break
 
     # 任务9：庆祝通过
     for pos in range(181):
