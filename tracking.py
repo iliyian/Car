@@ -509,6 +509,7 @@ try:
         # 执行相应的动作
         if action_name == "特殊标识":
             run(35, 35)  # 使用避障函数中的速度参数
+            time.sleep(0.05)
         elif action_name == "左转":
             # 硬编码左转：使用避障函数中的参数
             spin_left(40, 40)
@@ -523,6 +524,7 @@ try:
             time.sleep(0.1)
         elif action_name == "直线行驶":
             run(35, 35)  # 使用避障函数中的速度参数
+            time.sleep(0.05)
         else:
             brake()
        
