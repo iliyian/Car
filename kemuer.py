@@ -907,6 +907,8 @@ try:
     # 任务6：双线行驶，但在进入双线寻路循环前先行驶一段，驶离黑线
     run(20, 20)
     time.sleep(0.2)
+    spin_left(15,15)
+    time.sleep(0.2)
     search_line_only(4)
     run(10,10)
     time.sleep(0.2)
