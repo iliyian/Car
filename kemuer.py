@@ -940,7 +940,7 @@ def voice_welcome():
         print("Unable to connect to the speech recognition service")
         
 def voice_play(id):
-    os.system("mpg321 " + str(id) + ".mp3")
+    os.system("mpg321 ./music/" + str(id) + ".mp3")
 
 def voice_avoid_obstacle():
     prompt_text = "下一项目：障碍绕行。请准备。"
