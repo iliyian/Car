@@ -131,70 +131,6 @@ def Distance_test(temperature=25):
     distance = sum(ultrasonic) / len(ultrasonic)
     return distance
 
-#绕行函数
-def avoid_obstacle():
-    print("检测到障碍物，开始硬编码绕行...")
-    
-    # 停止前进
-    brake()
-    time.sleep(0.1)
-    
-    # 后退一小段距离
-    back(30, 30)
-    time.sleep(0.3)
-    brake()
-    
-    # 硬编码绕行动作序列
-    # 1. 原地右转90度
-    print("步骤1: 原地右转90度")
-    spin_right(40, 40)
-    time.sleep(0.5)  # 调整时间以达到90度
-    brake()
-    time.sleep(0.1)
-    
-    # 2. 前进一段距离绕过障碍物
-    print("步骤2: 前进绕过障碍物")
-    run(35, 35)
-    time.sleep(1.0)  # 前进1秒
-    brake()
-    time.sleep(0.1)
-    
-    # 3. 原地左转90度
-    print("步骤3: 原地左转90度")
-    spin_left(40, 40)
-    time.sleep(0.5)  # 调整时间以达到90度
-    brake()
-    time.sleep(0.1)
-    
-    # 4. 前进回到原路径
-    print("步骤4: 前进回到原路径")
-    run(35, 35)
-    time.sleep(0.8)  # 前进0.8秒
-    brake()
-    time.sleep(0.1)
-    
-    # 5. 原地左转90度
-    print("步骤5: 原地左转90度")
-    spin_left(40, 40)
-    time.sleep(0.5)  # 调整时间以达到90度
-    brake()
-    time.sleep(0.1)
-    
-    # 6. 前进回到循迹线
-    print("步骤6: 前进回到循迹线")
-    run(35, 35)
-    time.sleep(0.5)  # 前进0.5秒
-    brake()
-    
-    print("转弯")
-    spin_right(40, 40)
-    time.sleep(0.5)
-    brake()
-    time.sleep(0.1)
-    
-    print("硬编码绕行完成，继续循迹")
-    return True
-
 #小车前进	
 def run(leftspeed, rightspeed):
     GPIO.output(IN1, GPIO.HIGH)
@@ -316,8 +252,71 @@ def get_tracking_action(L1, L2, R1, R2):
     # 默认状态
     return ("保持当前状态", 0, 0, False)
 
+
+#绕行函数
+def avoid_obstacle():
+    print("检测到障碍物，开始硬编码绕行...")
+    
+    # 停止前进
+    brake()
+    time.sleep(0.1)
+    
+    # 硬编码绕行动作序列
+    # 1. 原地右转90度
+    print("步骤1: 原地右转90度")
+    spin_right(40, 40)
+    time.sleep(0.5)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 2. 前进一段距离绕过障碍物
+    print("步骤2: 前进绕过障碍物")
+    run(35, 35)
+    time.sleep(1.0)  # 前进1秒
+    brake()
+    time.sleep(0.1)
+    
+    # 3. 原地左转90度
+    print("步骤3: 原地左转90度")
+    spin_left(40, 40)
+    time.sleep(0.5)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 4. 前进回到原路径
+    print("步骤4: 前进回到原路径")
+    run(35, 35)
+    time.sleep(0.8)  # 前进0.8秒
+    brake()
+    time.sleep(0.1)
+    
+    # 5. 原地左转90度
+    print("步骤5: 原地左转90度")
+    spin_left(40, 40)
+    time.sleep(0.5)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 6. 前进回到循迹线
+    print("步骤6: 前进回到循迹线")
+    run(35, 35)
+    time.sleep(0.5)  # 前进0.5秒
+    brake()
+    
+    print("转弯")
+    spin_right(40, 40)
+    time.sleep(0.5)
+    brake()
+    time.sleep(0.1)
+    
+    print("硬编码绕行完成，继续循迹")
+    return True
+
+
 #延时2s	
-time.sleep(2)
+# time.sleep(2)
+avoid_obstacle()
+raise Exception("测试")
 
 print("=" * 50)
 print("循迹避障测试程序启动")
@@ -346,6 +345,8 @@ print("=" * 50)
 #从而让except语句捕获异常信息并处理。
 
 cnt = 0
+distance = Distance_test(ENVIRONMENT_TEMPERATURE)
+sound_speed = calculate_sound_speed(ENVIRONMENT_TEMPERATURE)
 
 try:
     init()
@@ -353,12 +354,10 @@ try:
     print("开始循迹避障测试...")
     print("-" * 50)
     
+    
     while True:
         # 超声波测距检测（使用温度补偿）
-        distance = Distance_test(ENVIRONMENT_TEMPERATURE)
-        sound_speed = calculate_sound_speed(ENVIRONMENT_TEMPERATURE)
-        print("前方距离: {:.1f} cm (声速: {:.1f} m/s, 温度: {}°C)".format(
-            distance, sound_speed, ENVIRONMENT_TEMPERATURE), end=" | ")
+        print("前方距离: {:.1f} cm".format(distance), end=" | ")
         
         # 如果检测到障碍物，执行绕行
         if distance < OBSTACLE_DISTANCE and cnt > 0:
