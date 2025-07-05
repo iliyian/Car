@@ -280,6 +280,10 @@ print("=" * 50)
 
 init()
 print("硬件初始化完成")
+
+# 创建状态机实例
+status = Status()
+
 print("开始双线S型过弯循迹测试...")
 print("-" * 50)
     
