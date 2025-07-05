@@ -33,7 +33,7 @@ SAFE_DISTANCE = 50      # 安全距离阈值（厘米）
 ENVIRONMENT_TEMPERATURE = 25  # 环境温度（摄氏度）
 
 #传感器读取模式配置
-SENSOR_READING_MODE = "timing_compensation"  # 可选: "single", "multiple_samples", "timing_compensation"
+SENSOR_READING_MODE = "multiple_samples"  # 可选: "single", "multiple_samples", "timing_compensation"
 # single: 单次读取（原始方法）
 # multiple_samples: 多次采样多数表决
 # timing_compensation: 时序补偿（推荐，专门解决R2偏后问题）
@@ -524,9 +524,9 @@ try:
             (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_with_timing_compensation()
         
         # 显示传感器状态、采样统计和测距结果
-        sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{} | 测距: {:.1f}cm".format(
-            TrackSensorLeftValue1, TrackSensorLeftValue2, 
-            TrackSensorRightValue1, TrackSensorRightValue2, distance)
+        sensor_status = "传感器状态: {} {} {} {} | 测距: {:.1f}cm".format(
+            int(TrackSensorLeftValue1), int(TrackSensorLeftValue2), 
+            int(TrackSensorRightValue1), int(TrackSensorRightValue2), distance)
         print(sensor_status, end=" | ")
         # print(debug_info, end=" | ")
         
