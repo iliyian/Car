@@ -32,6 +32,12 @@ SAFE_DISTANCE = 50      # 安全距离阈值（厘米）
 #环境温度设置（用于声速计算）
 ENVIRONMENT_TEMPERATURE = 25  # 环境温度（摄氏度）
 
+#传感器读取模式配置
+SENSOR_READING_MODE = "timing_compensation"  # 可选: "single", "multiple_samples", "timing_compensation"
+# single: 单次读取（原始方法）
+# multiple_samples: 多次采样多数表决
+# timing_compensation: 时序补偿（推荐，专门解决R2偏后问题）
+
 #设置GPIO口为BCM编码方式
 GPIO.setmode(GPIO.BCM)
 
@@ -250,11 +256,129 @@ def get_tracking_action(L1, L2, R1, R2):
         return ("直线行驶", 20, 20, False)
     
     if total_black == 0:
-        return ("特殊标识", 20, 20, True)
+        return ("直线", 20, 20, True)
     
     # 默认状态
     return ("保持当前状态", 0, 0, False)
 
+#多次采样传感器读取函数（解决R2传感器偏后的时序问题）
+def read_sensors_multiple_samples(sample_count=5, sample_interval=0.01):
+    """
+    多次采样读取传感器状态，采用多数表决法
+    参数: 
+        sample_count - 采样次数，默认5次
+        sample_interval - 采样间隔时间（秒），默认0.01秒
+    返回: (L1, L2, R1, R2) - 四个传感器的最终状态
+    """
+    # 存储每次采样的结果
+    samples = {
+        'L1': [],
+        'L2': [], 
+        'R1': [],
+        'R2': []
+    }
+    
+    # 进行多次采样
+    for i in range(sample_count):
+        # 读取传感器状态
+        L1 = GPIO.input(TrackSensorLeftPin1)
+        L2 = GPIO.input(TrackSensorLeftPin2)
+        R1 = GPIO.input(TrackSensorRightPin1)
+        R2 = GPIO.input(TrackSensorRightPin2)
+        
+        # 存储采样结果
+        samples['L1'].append(L1)
+        samples['L2'].append(L2)
+        samples['R1'].append(R1)
+        samples['R2'].append(R2)
+        
+        # 采样间隔
+        if i < sample_count - 1:  # 最后一次采样后不需要延时
+            time.sleep(sample_interval)
+    
+    # 多数表决法确定最终状态
+    # 如果False（黑线）的数量 >= True（白线）的数量，则判定为False
+    final_L1 = samples['L1'].count(False) >= samples['L1'].count(True)
+    final_L2 = samples['L2'].count(False) >= samples['L2'].count(True)
+    final_R1 = samples['R1'].count(False) >= samples['R1'].count(True)
+    final_R2 = samples['R2'].count(False) >= samples['R2'].count(True)
+    
+    # 调试信息：显示采样统计
+    debug_info = "采样统计 - L1:{}/{} L2:{}/{} R1:{}/{} R2:{}/{}".format(
+        samples['L1'].count(False), samples['L1'].count(True),
+        samples['L2'].count(False), samples['L2'].count(True),
+        samples['R1'].count(False), samples['R1'].count(True),
+        samples['R2'].count(False), samples['R2'].count(True)
+    )
+    
+    return (final_L1, final_L2, final_R1, final_R2), debug_info
+
+#智能传感器读取函数（根据速度自适应采样）
+def read_sensors_adaptive(speed_level="normal"):
+    """
+    根据小车速度自适应调整采样策略
+    参数: speed_level - 速度级别 ("slow", "normal", "fast")
+    返回: (L1, L2, R1, R2) - 四个传感器的最终状态
+    """
+    if speed_level == "slow":
+        # 低速时使用较少采样，快速响应
+        return read_sensors_multiple_samples(sample_count=3, sample_interval=0.005)
+    elif speed_level == "fast":
+        # 高速时使用更多采样，提高准确性
+        return read_sensors_multiple_samples(sample_count=7, sample_interval=0.015)
+    else:
+        # 正常速度使用默认采样
+        return read_sensors_multiple_samples(sample_count=5, sample_interval=0.01)
+
+#时序补偿传感器读取函数（专门处理R2传感器偏后问题）
+def read_sensors_with_timing_compensation():
+    """
+    时序补偿传感器读取，专门处理R2传感器偏后的问题
+    返回: (L1, L2, R1, R2) - 四个传感器的最终状态
+    """
+    # 第一轮采样：读取所有传感器
+    L1_1 = GPIO.input(TrackSensorLeftPin1)
+    L2_1 = GPIO.input(TrackSensorLeftPin2)
+    R1_1 = GPIO.input(TrackSensorRightPin1)
+    R2_1 = GPIO.input(TrackSensorRightPin2)
+    
+    # 短暂延时，等待R2传感器稳定
+    time.sleep(0.02)  # 20ms延时，给R2传感器更多时间
+    
+    # 第二轮采样：重点检查R2传感器
+    L1_2 = GPIO.input(TrackSensorLeftPin1)
+    L2_2 = GPIO.input(TrackSensorLeftPin2)
+    R1_2 = GPIO.input(TrackSensorRightPin1)
+    R2_2 = GPIO.input(TrackSensorRightPin2)
+    
+    # 第三轮采样：再次确认R2状态
+    time.sleep(0.01)  # 10ms延时
+    L1_3 = GPIO.input(TrackSensorLeftPin1)
+    L2_3 = GPIO.input(TrackSensorLeftPin2)
+    R1_3 = GPIO.input(TrackSensorRightPin1)
+    R2_3 = GPIO.input(TrackSensorRightPin2)
+    
+    # 确定最终状态
+    # 对于L1, L2, R1：使用前两轮采样的多数表决
+    final_L1 = (L1_1 + L1_2) >= 1  # 如果两轮中有1轮或以上为True，则判定为True
+    final_L2 = (L2_1 + L2_2) >= 1
+    final_R1 = (R1_1 + R1_2) >= 1
+    
+    # 对于R2：使用三轮采样的多数表决，并考虑时序补偿
+    R2_votes = [R2_1, R2_2, R2_3]
+    final_R2 = R2_votes.count(False) >= R2_votes.count(True)
+    
+    # 时序补偿逻辑：如果L1检测到黑线但R2没有，可能是R2还没检测到
+    if not final_L1 and final_R2:  # L1=黑线，R2=白线
+        # 检查R2是否在后续采样中变为黑线
+        if R2_2 == False or R2_3 == False:
+            final_R2 = False  # 补偿R2为黑线
+    
+    # 调试信息
+    debug_info = "时序补偿 - R2采样:{}->{}->{} 最终:{}".format(
+        R2_1, R2_2, R2_3, final_R2)
+    
+    return (final_L1, final_L2, final_R1, final_R2), debug_info
 
 #绕行函数
 def avoid_obstacle():
@@ -341,6 +465,14 @@ print("   • 安全距离阈值: {} cm".format(SAFE_DISTANCE))
 print("   • 环境温度: {}°C".format(ENVIRONMENT_TEMPERATURE))
 print("   • 计算声速: {:.1f} m/s".format(calculate_sound_speed(ENVIRONMENT_TEMPERATURE)))
 print("=" * 50)
+print("传感器读取模式: {}".format(SENSOR_READING_MODE))
+if SENSOR_READING_MODE == "timing_compensation":
+    print("   • 时序补偿模式：专门解决R2传感器偏后问题")
+elif SENSOR_READING_MODE == "multiple_samples":
+    print("   • 多次采样模式：使用多数表决法提高准确性")
+else:
+    print("   • 单次读取模式：原始方法，可能存在时序问题")
+print("=" * 50)
 print("传感器状态说明:")
 print("   • 0 = 检测到黑线")
 print("   • 1 = 检测到白线")
@@ -375,18 +507,28 @@ try:
                 print("障碍物已移除，继续循迹")
                 continue
         
-        #检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
-        #未检测到黑线时循迹模块相应的指示灯灭，端口电平为HIGH
-        TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
-        TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
-        TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
-        TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
+        # 根据配置选择传感器读取方法
+        if SENSOR_READING_MODE == "single":
+            # 单次读取（原始方法）
+            TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
+            TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
+            TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
+            TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
+            debug_info = "单次读取模式"
+        elif SENSOR_READING_MODE == "multiple_samples":
+            # 多次采样多数表决
+            current_speed_level = "normal"
+            (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_adaptive(current_speed_level)
+        else:
+            # 时序补偿（默认推荐方法）
+            (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_with_timing_compensation()
         
-        # 显示传感器状态和测距结果
-        sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{} | 测距: {:.1f}cm".format(
-            TrackSensorLeftValue1, TrackSensorLeftValue2, 
-            TrackSensorRightValue1, TrackSensorRightValue2, distance)
-        print(sensor_status, end=" | ")
+        # 显示传感器状态、采样统计和测距结果
+        # sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{} | 测距: {:.1f}cm".format(
+        #     TrackSensorLeftValue1, TrackSensorLeftValue2, 
+        #     TrackSensorRightValue1, TrackSensorRightValue2, distance)
+        # print(sensor_status, end=" | ")
+        print(debug_info, end=" | ")
         
         # 特殊标识处理
         if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
