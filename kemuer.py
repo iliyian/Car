@@ -919,7 +919,7 @@ try:
         if status.change_status(get_code()):
             print("退出双线模式")
             run(15,15)
-            time.sleep(0.2)
+            time.sleep(1)
             break
 
     # 任务7：侧方停车
