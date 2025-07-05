@@ -608,6 +608,8 @@ class Status:
             brake()
             time.sleep(0.1)
             return 1
+        elif self.flag == 1
+            return 1
         if code == '0000' and self.flag == 1:  # 只有遇到纯白，才会寻找下一条黑线
             run(15, 15)
             self.flag = 0
@@ -845,20 +847,20 @@ try:
 #
 #     # 任务2：S弯
 #     # 实现方式：巡线模式
-#     search_line_only()
-#
-#     # 任务3：直角转弯
-#     # 实现方式：巡线模式
-#
-#     # 任务4：侧方停车
-#     # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
-#     parallel_parking()
-#
-#     # 任务5：避障
-#     # 实现方式：先避障，再回到巡线模式
-#     search_line()
-#     avoid()
-#     search_line_only()
+
+
+    # 任务3：直角转弯
+    # 实现方式：巡线模式
+    search_line_only()
+
+    # 任务4：倒车入库
+    park()
+
+    # 任务5：避障
+    # 实现方式：先避障，再回到巡线模式
+    search_line()
+    avoid()
+    search_line_only()
 
     # 任务6：双线行驶，但在进入双线寻路循环前先行驶一段，驶离黑线
     #run(20, 20)
@@ -874,8 +876,11 @@ try:
             print("退出双线模式")
             break
 
-    # 任务7：倒车入库
-    park()
+    # 任务7：侧方停车
+    # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
+    parallel_parking()
+
+
     # 任务8：再次人脸识别并提交考核成绩（发送邮件给考生）
     while True:
         for i in range(10):
