@@ -350,7 +350,7 @@ def search_line():
 
         # 全黑，表示抵达特殊任务点，返回2
         if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
-            print("发现特殊任务点，退出巡线模式！")
+            print("searc_line: 发现特殊任务点，退出巡线模式！")
             brake()
             return 2
 
