@@ -112,6 +112,151 @@ def brake():
     GPIO.output(IN3, GPIO.LOW)
     GPIO.output(IN4, GPIO.LOW)
 
+# 双线寻迹模式参数
+check_time = 1  # 边界旋转重试次数
+spin_time = 0.08  # 修正方向旋转的时间
+spin_time_long = 0.45
+
+
+# 双线寻迹模式下，获取四路循迹的状态码
+def get_code():
+    # False为检测到黑色,code为1
+    # True为未检测到，code为0
+    TrackSensorLeftValue1 = GPIO.input(TrackSensorLeftPin1)
+    TrackSensorLeftValue2 = GPIO.input(TrackSensorLeftPin2)
+    TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
+    TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
+    code = ''
+    if TrackSensorLeftValue1:
+        code = code + '0'
+    else:
+        code = code + '1'
+    if TrackSensorLeftValue2:
+        code = code + '0'
+    else:
+        code = code + '1'
+    if TrackSensorRightValue1:
+        code = code + '0'
+    else:
+        code = code + '1'
+    if TrackSensorRightValue2:
+        code = code + '0'
+    else:
+        code = code + '1'
+    return code
+
+
+# 双线寻迹模式，用于维护寻迹模式的状态
+class Status:
+    def __init__(self):
+        pass
+
+    status = 0  # 状态机当前状态
+    count = 0  # 边缘重试计数器
+    flag = 0  # 黑线标志位
+    black_line = 0  # 黑线数量
+
+    # status列表
+    # 0：正常前进
+    # 1：右1有障碍，应该继续前进
+    # 2：右1一直有障碍，应该略微左转
+    # 3：右2有障碍
+    # 4：右3有障碍
+    # 5：右4有障碍，应该左转90°
+    # 6：左1有障碍，应该继续前进
+    # 7：左1一直有障碍，应该略微右转
+    # 8：左2有障碍
+    # 9：左3有障碍
+    # 10：左4有障碍，应该左转90°
+
+    def change_status(self, code):
+        # print(self.status, ' ', code)
+        if self.status == 0:
+            if code == '0001':  # 右侧出现黑线
+                self.status = 1
+            if code == '1000':  # 左侧出现黑线
+                self.status = 6
+        elif self.status == 1:
+            if code == '0000':  # 右侧黑线消失
+                self.count = 0
+                self.status = 0
+            if code == '0011' or code == '0010':  # 黑线的范围变大
+                self.count = 0
+                self.status = 3
+            if code == '0111' or code == '0110' or code == '0100':  # 黑线的范围变大
+                self.count = 0
+                self.status = 4
+            if code == '0001':  # 黑线保持，计数器累加
+                self.count = self.count + 1
+                if self.count == check_time:
+                    self.status = 2
+        elif self.status == 2:  # 适当旋转，离开黑线
+            spin_left(15, 15)
+            time.sleep(spin_time)
+            run(15, 15)
+            self.count = 0
+            self.status = 0
+        elif self.status == 3:
+            if code == '0000':  # 黑线消失
+                self.status = 0
+            if code == '0111' or code == '0110' or code == '0100':  # 黑线左移
+                self.status = 4
+        elif self.status == 4:
+            if code == '0000':  # 黑线消失
+                self.status = 0
+            if code == '1111' or code == '1110' or code == '1100' or code == '1000':  # 黑线完全左移，说明该左转了
+                self.status = 5
+        elif self.status == 5:  # 左转
+            spin_left(15, 15)
+            time.sleep(spin_time_long)  # 旋转比较长的时间，旋转90°
+            run(15, 15)
+            self.status = 0
+        elif self.status == 6:
+            if code == '0000':
+                self.count = 0
+                self.status = 0
+            if code == '1100' or code == '0100':
+                self.count = 0
+                self.status = 8
+            if code == '1110' or code == '0110' or code == '0010':
+                self.count = 0
+                self.status = 9
+            if code == '1000':
+                self.count = self.count + 1
+                if self.count == check_time:
+                    self.status = 7
+        elif self.status == 7:
+            spin_right(15, 15)
+            time.sleep(spin_time)
+            run(15, 15)
+            self.count = 0
+            self.status = 0
+        elif self.status == 8:
+            if code == '0000':
+                self.status = 0
+            if code == '1110' or code == '0110' or code == '0010':
+                self.status = 9
+        elif self.status == 9:
+            if code == '0000':
+                self.status = 0
+            if code == '1111' or code == '0111' or code == '0011' or code == '0001':
+                self.status = 10
+        elif self.status == 10:
+            spin_right(15, 15)
+            time.sleep(spin_time_long)
+            run(15, 15)
+            self.status = 0
+        if code == '1111' and self.flag == 0:  # 遇到黑线，计数器加一，等待下一条
+            self.flag = 1
+            self.black_line = self.black_line + 1
+            brake()
+            time.sleep(0.1)
+            return 1
+        if code == '0000' and self.flag == 1:  # 只有遇到纯白，才会寻找下一条黑线
+            run(15, 15)
+            self.flag = 0
+        return 0
+
 #延时2s
 time.sleep(2)
 
@@ -132,98 +277,25 @@ print("   • 格式: L1 L2 R1 R2")
 print("   • 双线S型过弯: 0111=右小弯, 1110=左小弯")
 print("=" * 50)
 
-try:
-    init()
-    print("硬件初始化完成")
-    print("开始双线S型过弯循迹测试...")
-    print("-" * 50)
+
+init()
+print("硬件初始化完成")
+print("开始双线S型过弯循迹测试...")
+print("-" * 50)
     
-    while True:
-        #检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
-        #未检测到黑线时循迹模块相应的指示灯灭，端口电平为HIGH
-        TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
-        TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
-        TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
-        TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
+print("进入双线模式")
+while True:
+    TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
+    TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
+    TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
+    TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
         
         # 显示传感器状态1
-        sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{}".format(
-            TrackSensorLeftValue1, TrackSensorLeftValue2, 
-            TrackSensorRightValue1, TrackSensorRightValue2)
-        print(sensor_status, end=" | ")
-        
-        # 双线S型过弯的核心逻辑
-        if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
-            print("左锐角/直角转弯")
-            spin_left(30, 35)
-            time.sleep(0.1)
-
-        #四路循迹引脚电平状态
-        # 0 0 X 0
-        # 1 0 X 0
-        # 0 1 X 0
-        #以上6种电平状态时小车原地右转
-        #处理右锐角和右直角的转动
-        elif (TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True) and (TrackSensorRightValue2 == False or TrackSensorRightValue1 == False):
-           print("最右边触线，左转")
-           left(0,35)
-           time.sleep(0.1)
- 
-        #四路循迹引脚电平状态
-        # 0 X 0 0       
-        # 0 X 0 1 
-        # 0 X 1 0       
-        #处理左锐角和左直角的转动
-        elif (TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False) and (TrackSensorRightValue2 == True or TrackSensorRightValue1 == True):
-           print("最左边触线，右转")
-           right(35, 0)
-           time.sleep(0.1)
-  
-        # 0 X X X
-        #最左边检测到
-        # elif TrackSensorLeftValue1 == False:
-        #     print("最左边检测到，左转")
-        #     spin_left(30, 30)
-     
-        # # X X X 0
-        # #最右边检测到
-        # elif TrackSensorRightValue2 == False:
-        #     print("最右边检测到，右转")
-        #     spin_right(30, 30)
-   
-        #四路循迹引脚电平状态
-        # X 0 1 X
-        #处理左小弯
-        # elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == True:
-        #     print("左小弯")
-        #     left(0,35)
-   
-        # #四路循迹引脚电平状态
-        # # X 1 0 X  
-        # #处理右小弯
-        # elif TrackSensorLeftValue2 == True and TrackSensorRightValue1 == False:
-        #     print("右小弯")
-        #     right(35, 0)
-   
-        #四路循迹引脚电平状态
-        # X 0 0 X
-        #处理直线
-        elif TrackSensorLeftValue1 == True and TrackSensorLeftValue2 == True and TrackSensorRightValue1 == True and TrackSensorRightValue2 == True:
-            print("直线行驶")
-            run(20, 20)
-   
-        #当为1 1 1 1时小车保持上一个小车运行状态
-        else:
-            print("保持当前状态")
-except KeyboardInterrupt:
-    print("\n" + "=" * 50)
-    print("程序被用户中断")
-    print("停止所有电机")
-    brake()
-    print("停止PWM输出")
-    pwm_ENA.stop()
-    pwm_ENB.stop()
-    print("清理GPIO")
-    GPIO.cleanup()
-    print("程序结束，GPIO已清理")
-    print("=" * 50)
+    sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{}".format(
+        TrackSensorLeftValue1, TrackSensorLeftValue2, 
+        TrackSensorRightValue1, TrackSensorRightValue2)
+    print(sensor_status, end=" | ")
+        # 根据四路循迹切换状态机的状态
+    if status.change_status(get_code()):
+        print("退出双线模式")
+        break
