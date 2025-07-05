@@ -126,8 +126,8 @@ try:
     print("=" * 50)
     
     run(20, 20)
-    time.sleep(2)
-    left(20, 20)
+    time.sleep(1)
+    spin_left(20, 60)
     time.sleep(1)
 
 except KeyboardInterrupt:
