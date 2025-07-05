@@ -716,6 +716,7 @@ def park():
     back(15, 15)
     time.sleep(1.1)
     brake()
+    time.sleep(2) # 等待2秒
 
 
 # 邮件发送函数，参数recipient是接受者，subject是邮件主题，text是邮件内容
