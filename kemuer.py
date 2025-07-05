@@ -998,7 +998,7 @@ try:
     search_line_only(3)
 
     # 任务2：倒车入库
-    voice_play(2)
+    # voice_play(2)
     park()
 
     # 任务3：曲线
@@ -1025,9 +1025,10 @@ try:
 
     # 任务4：侧方停车
     # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
-    voice_play(4)
     
     search_line_only(5)
+    voice_play(4)
+    
     parallel_parking()
     search_line_only(6)
 
