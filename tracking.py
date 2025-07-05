@@ -472,7 +472,7 @@ cnt = 0
 distance = Distance_test(ENVIRONMENT_TEMPERATURE)
 sound_speed = calculate_sound_speed(ENVIRONMENT_TEMPERATURE)
 
-print(read_sensors_multiple_samples())
+print(GPIO.input(TrackSensorLeftPin1),GPIO.input(TrackSensorLeftPin2),GPIO.input(TrackSensorRightPin1),GPIO.input(TrackSensorRightPin2))
 raise Exception("测试")
 
 try:
