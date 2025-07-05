@@ -878,6 +878,7 @@ try:
 
     # 任务7：侧方停车
     # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
+    search_line_only()
     parallel_parking()
     search_line_only()
 
