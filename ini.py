@@ -116,66 +116,69 @@ def brake():
 #超声波引脚定义
 EchoPin = 0
 TrigPin = 1
+
+TEMPERATURE = 30
+SPEED_OF_SOUND = 331 + 0.6 * TEMPERATURE
     
-# 超声波测距，如果为1000则未检测到
-# 由于实践中存在测距异常的情况（没有障碍，但是会偶然测到障碍），实现中每次测距会测3次，取平均值，其中只要有1次为1000就表示没检测到
-def Distance():
+def distance():
+    """单次超声波测距，带超时检测"""
     GPIO.output(TrigPin, GPIO.LOW)
     time.sleep(0.000002)
     GPIO.output(TrigPin, GPIO.HIGH)
-    time.sleep(0.000012)
+    time.sleep(0.000015)
     GPIO.output(TrigPin, GPIO.LOW)
+
     t3 = time.time()
-    while not GPIO.input(EchoPin):  # 等回音超过3ms，视为无关障碍
+
+    # 等待回声引脚变高，带超时检测
+    while not GPIO.input(EchoPin):
         t4 = time.time()
-        if (t4 - t3) > 0.003:
-            return 1000
+        if (t4 - t3) > 0.03:  # 超时30ms
+            return -1
+
     t1 = time.time()
-    while GPIO.input(EchoPin):  # 看回音持续了多久，超过3ms视为噪音
+    
+    # 等待回声引脚变低，带超时检测
+    while GPIO.input(EchoPin):
         t5 = time.time()
-        if (t5 - t1) > 0.003:
-            return 1000
+        if (t5 - t1) > 0.03:  # 超时30ms
+            return -1
 
     t2 = time.time()
-    k1 = ((t2 - t1) * 340 / 2) * 100
-    GPIO.output(TrigPin, GPIO.LOW)
-    time.sleep(0.000002)
-    GPIO.output(TrigPin, GPIO.HIGH)
-    time.sleep(0.000012)
-    GPIO.output(TrigPin, GPIO.LOW)
-    t3 = time.time()
-    while not GPIO.input(EchoPin):  # 等回音超过3ms，视为无关障碍
-        t4 = time.time()
-        if (t4 - t3) > 0.003:
-            return 1000
-    t1 = time.time()
-    while GPIO.input(EchoPin):  # 看回音持续了多久，超过3ms视为噪音
-        t5 = time.time()
-        if (t5 - t1) > 0.003:
-            return 1000
+    time.sleep(0.01)
+    
+    # 计算距离 (cm)
+    distance_cm = ((t2 - t1) * SPEED_OF_SOUND / 2) * 100
+    return distance_cm
 
-    t2 = time.time()
-    k2 = ((t2 - t1) * 340 / 2) * 100
-
-    GPIO.output(TrigPin, GPIO.LOW)
-    time.sleep(0.000002)
-    GPIO.output(TrigPin, GPIO.HIGH)
-    time.sleep(0.000012)
-    GPIO.output(TrigPin, GPIO.LOW)
-    t3 = time.time()
-    while not GPIO.input(EchoPin):  # 等回音超过3ms，视为无关障碍
-        t4 = time.time()
-        if (t4 - t3) > 0.003:
-            return 1000
-    t1 = time.time()
-    while GPIO.input(EchoPin):  # 看回音持续了多久，超过3ms视为噪音
-        t5 = time.time()
-        if (t5 - t1) > 0.003:
-            return 1000
-
-    t2 = time.time()
-    k3 = ((t2 - t1) * 340 / 2) * 100
-    return (k1 + k2 + k3) / 3.0
+def distance_test():
+    """多次测量取平均值，提高测量准确性"""
+    num = 0
+    ultrasonic = []
+    
+    while num < 5:
+        dist = distance()
+        
+        # 重新测量直到获得有效数据
+        while int(dist) == -1:
+            dist = distance()
+            print("测量超时，重新测量...")
+        
+        # 过滤异常数据
+        while (int(dist) >= 500 or int(dist) == 0):
+            dist = distance()
+            print("测量数据异常: %f cm，重新测量..." % dist)
+        
+        ultrasonic.append(dist)
+        num = num + 1
+        time.sleep(0.01)
+    
+    print("五次测量结果:", ultrasonic)
+    
+    # 取中间三次测量的平均值，去除极值
+    distance_avg = (ultrasonic[1] + ultrasonic[2] + ultrasonic[3]) / 3
+    print("平均距离: %.2f cm" % distance_avg)
+    return distance_avg
   
 #绕行函数
 def avoid_obstacle():
@@ -238,7 +241,7 @@ def avoid_obstacle():
 
 def search_line():
     while True:
-        distance = Distance()
+        distance = distance_test()
         print("距离: ", distance, end=' | ')
         if distance < 10:
             return
