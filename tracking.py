@@ -249,6 +249,9 @@ def get_tracking_action(L1, L2, R1, R2):
     if L2 == False and R1 == False:
         return ("直线行驶", 20, 20, False)
     
+    if total_black == 0:
+        return ("特殊标识", 20, 20, True)
+    
     # 默认状态
     return ("保持当前状态", 0, 0, False)
 
