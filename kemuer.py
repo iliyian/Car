@@ -696,6 +696,11 @@ def parallel_parking():
     time.sleep(1.2)
     back(15, 15)
     time.sleep(0.1)
+    
+    brake()
+    time.sleep(2)
+    print("侧方停车完成")
+    
     spin_right(10,10)
     time.sleep(0.1)
     brake()
