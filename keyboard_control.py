@@ -109,25 +109,32 @@ def get_key():
         return sys.stdin.read(1)
     return None
 
+#清屏函数
+def clear_screen():
+    """清屏"""
+    print("\033[2J\033[H", end="")
+
+#显示状态信息
+def show_status(action, speed):
+    """显示当前状态信息"""
+    print(f"\r[状态] {action} | 速度: {speed}% | 按ESC退出", end="", flush=True)
+
 #显示控制说明
 def show_instructions():
+    clear_screen()
     print("=" * 60)
     print("              WASD 键盘控制小车程序")
     print("=" * 60)
     print("控制说明:")
-    print("   W - 前进")
-    print("   S - 后退")
-    print("   A - 左转")
-    print("   D - 右转")
-    print("   Q - 原地左转")
-    print("   E - 原地右转")
-    print("   空格 - 停止")
-    print("   1-9 - 调整速度 (1=最慢, 9=最快)")
+    print("   W - 前进          S - 后退")
+    print("   A - 左转          D - 右转")
+    print("   Q - 原地左转      E - 原地右转")
+    print("   空格 - 停止       1-9 - 调整速度")
     print("   ESC/Ctrl+C - 退出程序")
     print("=" * 60)
-    print("当前速度: 50%")
-    print("请按键控制小车...")
+    print("状态显示: [状态] 动作 | 速度: XX% | 按ESC退出")
     print("=" * 60)
+    print()
 
 #主程序
 def main():
@@ -146,6 +153,9 @@ def main():
         # 默认速度
         current_speed = 50
         
+        # 显示初始状态
+        show_status("待命", current_speed)
+        
         while True:
             # 获取键盘输入
             key_input = get_key()
@@ -154,69 +164,64 @@ def main():
                 key_input = key_input.lower()
                 
                 if key_input == 'w':
-                    print(f"前进 - 速度: {current_speed}%")
+                    show_status("前进", current_speed)
                     run(current_speed, current_speed)
                     
                 elif key_input == 's':
-                    print(f"后退 - 速度: {current_speed}%")
+                    show_status("后退", current_speed)
                     back(current_speed, current_speed)
                     
                 elif key_input == 'a':
-                    print(f"左转 - 速度: {current_speed}%")
+                    show_status("左转", current_speed)
                     left(0, current_speed)
                     
                 elif key_input == 'd':
-                    print(f"右转 - 速度: {current_speed}%")
+                    show_status("右转", current_speed)
                     right(current_speed, 0)
                     
                 elif key_input == 'q':
-                    print(f"原地左转 - 速度: {current_speed}%")
+                    show_status("原地左转", current_speed)
                     spin_left(current_speed, current_speed)
                     
                 elif key_input == 'e':
-                    print(f"原地右转 - 速度: {current_speed}%")
+                    show_status("原地右转", current_speed)
                     spin_right(current_speed, current_speed)
                     
                 elif key_input == ' ':
-                    print("停止")
+                    show_status("停止", current_speed)
                     brake()
                     
                 elif key_input in '123456789':
                     # 调整速度 (1-9 对应 10%-90%)
                     speed_level = int(key_input)
                     current_speed = speed_level * 10
-                    print(f"速度调整为: {current_speed}%")
+                    show_status("速度调整", current_speed)
                     
                 elif key_input == '\x1b':  # ESC键
-                    print("退出程序")
+                    print("\n退出程序")
                     break
                     
                 elif key_input == '\x03':  # Ctrl+C
-                    print("程序被中断")
+                    print("\n程序被中断")
                     break
-                    
-                else:
-                    print(f"未知按键: {repr(key_input)}")
             
             # 短暂延时，避免CPU占用过高
             time.sleep(0.05)
             
     except KeyboardInterrupt:
-        print("\n程序被用户中断")
+        print("\n\n程序被用户中断")
         
     finally:
         # 恢复终端设置
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         
         # 清理GPIO
-        print("停止所有电机")
+        print("\n正在清理资源...")
         brake()
-        print("停止PWM输出")
         pwm_ENA.stop()
         pwm_ENB.stop()
-        print("清理GPIO")
         GPIO.cleanup()
-        print("程序结束")
+        print("程序已安全退出")
 
 if __name__ == "__main__":
     main() 
