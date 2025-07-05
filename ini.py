@@ -111,24 +111,20 @@ def brake():
     GPIO.output(IN3, GPIO.LOW)
     GPIO.output(IN4, GPIO.LOW)
 
-#按键检测
-def key_scan():
-    while GPIO.input(key):
-        pass
-    while not GPIO.input(key):
-        time.sleep(0.01)
-        if not GPIO.input(key):
-            time.sleep(0.01)
-            while not GPIO.input(key):
-                pass
-
-#延时2s
-# time.sleep(2)
-
 #try/except语句用来检测try语句块中的错误，
 #从而让except语句捕获异常信息并处理。
 try:
     init()
+    print("硬件初始化完成")
+    print("=" * 50)
+    print("循迹程序启动")
+    print("=" * 50)
+    print("传感器状态说明:")
+    print("   • False/0 = 检测到黑线")
+    print("   • True/1 = 检测到白线")
+    print("   • 格式: L1 L2 R1 R2")
+    print("=" * 50)
+    
     # key_scan()
     while True:
         #检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
@@ -138,6 +134,12 @@ try:
         TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
         TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
 
+        # 显示传感器状态
+        sensor_status = "传感器状态: {} {} {} {}".format(
+            int(TrackSensorLeftValue1), int(TrackSensorLeftValue2),
+            int(TrackSensorRightValue1), int(TrackSensorRightValue2))
+        print(sensor_status, end=" | ")
+
         #四路循迹引脚电平状态
         # 0 0 X 0
         # 1 0 X 0
@@ -145,6 +147,7 @@ try:
         #以上6种电平状态时小车原地右转
         #处理右锐角和右直角的转动
         if (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and  TrackSensorRightValue2 == False:
+           print("右锐角/右直角转动 - 原地右转(35,30)")
            spin_right(35, 30)
            time.sleep(0.1)
 
@@ -154,40 +157,60 @@ try:
         # 0 X 1 0
         #处理左锐角和左直角的转动
         elif TrackSensorLeftValue1 == False and (TrackSensorRightValue1 == False or  TrackSensorRightValue2 == False):
+           print("左锐角/左直角转动 - 原地左转(30,35)")
            spin_left(30,35 )
            time.sleep(0.1)
 
         # 0 X X X
         #最左边检测到
         elif TrackSensorLeftValue1 == False:
+           print("最左边检测到 - 原地左转(30,30)")
            spin_left(30, 30)
 
         # X X X 0
         #最右边检测到
         elif TrackSensorRightValue2 == False:
+           print("最右边检测到 - 原地右转(30,30)")
            spin_right(30, 30)
 
         #四路循迹引脚电平状态
         # X 0 1 X
         #处理左小弯
         elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == True:
+           print("左小弯 - 左转(0,35)")
            left(0,35)
 
         #四路循迹引脚电平状态
         # X 1 0 X
         #处理右小弯
         elif TrackSensorLeftValue2 == True and TrackSensorRightValue1 == False:
+           print("右小弯 - 右转(35,0)")
            right(35, 0)
 
         #四路循迹引脚电平状态
         # X 0 0 X
         #处理直线
         elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False:
+           print("直线行驶 - 前进(35,35)")
            run(35, 35)
+        
+        else:
+           print("保持上一状态 - 传感器状态: {} {} {} {}".format(
+               int(TrackSensorLeftValue1), int(TrackSensorLeftValue2),
+               int(TrackSensorRightValue1), int(TrackSensorRightValue2)))
 
         #当为1 1 1 1时小车保持上一个小车运行状态
+        
+        # 添加短暂延时，避免输出过快
+        time.sleep(0.1)
 
 except KeyboardInterrupt:
+    print("\n" + "=" * 50)
+    print("程序被用户中断")
+    print("停止所有电机")
+    print("停止PWM输出")
+    print("清理GPIO")
+    print("=" * 50)
     pass
 pwm_ENA.stop()
 pwm_ENB.stop()
