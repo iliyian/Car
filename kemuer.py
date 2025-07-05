@@ -421,8 +421,9 @@ def search_line():
 
 
 # 无障碍检测下的巡线模式，只有在全黑的时候会退出程序，这个函数更快，更灵敏
-def search_line_only():
+def search_line_only(i):
     while True:
+        print("search_line_only: ", i, end=" | ")
         # 检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
         # 未检测到黑线时循迹模块相应的指示灯灭，端口电平为HIGH
         TrackSensorLeftValue1 = GPIO.input(TrackSensorLeftPin1)
@@ -890,15 +891,15 @@ try:
 
     # 任务3：直角转弯
     # 实现方式：巡线模式
-    search_line_only()
+    search_line_only(1)
 
     # 任务4：避障
     # 实现方式：先避障，再回到巡线模式
     run(15,15)
     time.sleep(0.5)
-    search_line()
+    search_line_only(2)
     avoid()
-    search_line_only()
+    search_line_only(3)
 
     # 任务5：倒车入库
     park()
@@ -906,7 +907,7 @@ try:
     # 任务6：双线行驶，但在进入双线寻路循环前先行驶一段，驶离黑线
     #run(20, 20)
     #time.sleep(0.2)
-    search_line_only()
+    search_line_only(4)
     run(10,10)
     time.sleep(0.2)
     status = Status()
@@ -919,9 +920,9 @@ try:
 
     # 任务7：侧方停车
     # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
-    search_line_only()
+    search_line_only(5)
     parallel_parking()
-    search_line_only()
+    search_line_only(6)
 
 
     # 任务8：再次人脸识别并提交考核成绩（发送邮件给考生）
