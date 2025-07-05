@@ -698,8 +698,8 @@ def parallel_parking():
     time.sleep(0.1)
     
     brake()
-    time.sleep(2)
     print("侧方停车完成")
+    time.sleep(2)
     
     spin_right(10,10)
     time.sleep(0.1)
@@ -710,7 +710,7 @@ def parallel_parking():
     spin_left(15, 15)
     time.sleep(0.35)  # 转弯后前方距离小于25cm时向左原地转弯180度
     run(12, 12)  # 转弯后当前方距离大于25cm时前进
-    time.sleep(0.4)
+    time.sleep(0.7)
 
 # 倒车入库
 def park():
