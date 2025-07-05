@@ -139,6 +139,11 @@ try:
             int(TrackSensorLeftValue1), int(TrackSensorLeftValue2),
             int(TrackSensorRightValue1), int(TrackSensorRightValue2))
         print(sensor_status, end=" | ")
+        
+        if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
+          brake()
+          time.sleep(0.1)
+          break
 
         #四路循迹引脚电平状态
         # 0 0 X 0
