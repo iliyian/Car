@@ -516,8 +516,10 @@ try:
         if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
             if cnt == 0:
                 run(20, 20)
+                print("特殊标识-首次检测")
             else:
                 brake()
+                print("特殊标识-停止")
             time.sleep(0.1)
             cnt += 1
             continue
