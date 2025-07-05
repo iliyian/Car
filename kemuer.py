@@ -998,7 +998,7 @@ try:
     search_line_only(3)
 
     # 任务2：倒车入库
-    # voice_play(2)
+    voice_play(2)
     park()
 
     # 任务3：曲线
