@@ -472,7 +472,7 @@ try:
             TrackSensorLeftValue2  = GPIO.input(TrackSensorLeftPin2)
             TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
             TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
-            debug_info = "单次读取模式"
+            # debug_info = "单次读取模式"
         elif SENSOR_READING_MODE == "multiple_samples":
             # 多次采样多数表决
             (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_multiple_samples()
@@ -508,7 +508,7 @@ try:
         
         # 执行相应的动作
         if action_name == "特殊标识":
-            run(35, 35)  # 使用避障函数中的速度参数
+            run(20, 20)  # 使用避障函数中的速度参数
             time.sleep(0.05)
         elif action_name == "左转":
             # 硬编码左转：使用避障函数中的参数
@@ -523,7 +523,7 @@ try:
             brake()
             time.sleep(0.1)
         elif action_name == "直线行驶":
-            run(35, 35)  # 使用避障函数中的速度参数
+            run(20, 20)  # 使用避障函数中的速度参数
             time.sleep(0.05)
         else:
             brake()
