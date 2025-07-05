@@ -328,6 +328,7 @@ def init():
 # 巡线模式，在遇到全黑或者距离障碍物小于40cm的时候退出程序
 def search_line():
     while True:
+        print("search_line: ")
         # 前方发现障碍，执行避障程序
         a = Distance()
         print("距离: {:.2f} cm".format(a), end=" | ")
