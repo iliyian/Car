@@ -906,9 +906,9 @@ try:
 
     # 任务6：双线行驶，但在进入双线寻路循环前先行驶一段，驶离黑线
     run(20, 20)
-    time.sleep(0.2)
+    time.sleep(0.6)
     spin_left(15,15)
-    time.sleep(0.2)
+    time.sleep(0.1)
     search_line_only(4)
     run(10,10)
     time.sleep(0.2)
@@ -918,6 +918,8 @@ try:
         # 根据四路循迹切换状态机的状态
         if status.change_status(get_code()):
             print("退出双线模式")
+            run(15,15)
+            time.sleep(0.2)
             break
 
     # 任务7：侧方停车
