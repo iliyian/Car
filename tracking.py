@@ -225,9 +225,9 @@ def get_tracking_action(L1, L2, R1, R2):
     # 直角转弯检测
     if left_black >= 1 and right_black >= 1:
         if left_black > right_black:
-            return ("左直角转弯", 40, 85, True)
+            return ("左直角转弯", 50, 100, True)
         elif left_black < right_black:
-            return ("右直角转弯", 85, 40, True)
+            return ("右直角转弯", 100, 50, True)
         else:
             return ("直线行驶", 20, 20, False)
     
