@@ -897,7 +897,7 @@ try:
     # 实现方式：先避障，再回到巡线模式
     run(15,15)
     time.sleep(0.5)
-    search_line(1)
+    search_line(2)
     avoid()
     search_line_only(3)
 
