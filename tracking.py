@@ -561,7 +561,8 @@ try:
         elif action_name == "直线行驶":
             run(left_speed, right_speed)
         else:  # 保持当前状态
-            brake()
+            pass
+            # brake()
         
         # 根据动作类型决定是否需要延时
         if need_delay:
