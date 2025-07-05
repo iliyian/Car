@@ -222,16 +222,12 @@ def get_tracking_action(L1, L2, R1, R2):
     if total_black == 4:
         return ("特殊标识", 0, False)
     
-    # 左转检测（左侧有黑线）
-    if left_black > 0 and right_black == 0:
+    if left_black > right_black:
         return ("左转", 0.405, True)  # 使用避障函数中的转向时间
-    
-    # 右转检测（右侧有黑线）
-    if right_black > 0 and left_black == 0:
+    elif right_black > left_black:
         return ("右转", 0.405, True)  # 使用避障函数中的转向时间
-    
-    # 直线行驶（中间有黑线或无黑线）
-    return ("直线行驶", 0, False)
+    else:
+        return ("直线行驶", 0, False)
 
 #多次采样传感器读取函数（解决R2传感器偏后的时序问题）
 def read_sensors_multiple_samples(sample_count=5, sample_interval=0.001):
