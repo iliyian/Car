@@ -332,7 +332,7 @@ def search_line(i):
         # 前方发现障碍，执行避障程序
         a = Distance()
         print("距离: {:.2f} cm".format(a), end=" | ")
-        if a <= 30:
+        if a <= 20:
             print("发现障碍物，退出巡线模式！")
             return 1
 
