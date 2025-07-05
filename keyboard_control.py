@@ -115,9 +115,10 @@ def clear_screen():
     print("\033[2J\033[H", end="")
 
 #显示状态信息
-def show_status(action, speed):
+def show_status(action, speed, reverse_mode=False):
     """显示当前状态信息"""
-    print(f"\r[状态] {action} | 速度: {speed}% | 按ESC退出", end="", flush=True)
+    mode_text = "倒车模式" if reverse_mode else "正常模式"
+    print(f"\r[状态] {action} | 速度: {speed}% | {mode_text} | 按ESC退出", end="", flush=True)
 
 #显示控制说明
 def show_instructions():
@@ -130,9 +131,10 @@ def show_instructions():
     print("   A - 左转          D - 右转")
     print("   Q - 原地左转      E - 原地右转")
     print("   空格 - 停止       1-9 - 调整速度")
-    print("   ESC/Ctrl+C - 退出程序")
+    print("   R - 切换倒车模式   ESC/Ctrl+C - 退出程序")
     print("=" * 60)
-    print("状态显示: [状态] 动作 | 速度: XX% | 按ESC退出")
+    print("倒车模式说明: 在倒车模式下，W/S和A/D方向会相反")
+    print("状态显示: [状态] 动作 | 速度: XX% | 模式 | 按ESC退出")
     print("=" * 60)
     print()
 
@@ -150,11 +152,12 @@ def main():
         
         show_instructions()
         
-        # 默认速度
+        # 默认速度和模式
         current_speed = 50
+        reverse_mode = False  # 倒车模式标志
         
         # 显示初始状态
-        show_status("待命", current_speed)
+        show_status("待命", current_speed, reverse_mode)
         
         while True:
             # 获取键盘输入
@@ -164,38 +167,68 @@ def main():
                 key_input = key_input.lower()
                 
                 if key_input == 'w':
-                    show_status("前进", current_speed)
-                    run(current_speed, current_speed)
+                    if reverse_mode:
+                        show_status("后退(倒车)", current_speed, reverse_mode)
+                        back(current_speed, current_speed)
+                    else:
+                        show_status("前进", current_speed, reverse_mode)
+                        run(current_speed, current_speed)
                     
                 elif key_input == 's':
-                    show_status("后退", current_speed)
-                    back(current_speed, current_speed)
+                    if reverse_mode:
+                        show_status("前进(倒车)", current_speed, reverse_mode)
+                        run(current_speed, current_speed)
+                    else:
+                        show_status("后退", current_speed, reverse_mode)
+                        back(current_speed, current_speed)
                     
                 elif key_input == 'a':
-                    show_status("左转", current_speed)
-                    left(0, current_speed)
+                    if reverse_mode:
+                        show_status("右转(倒车)", current_speed, reverse_mode)
+                        right(current_speed, 0)
+                    else:
+                        show_status("左转", current_speed, reverse_mode)
+                        left(0, current_speed)
                     
                 elif key_input == 'd':
-                    show_status("右转", current_speed)
-                    right(current_speed, 0)
+                    if reverse_mode:
+                        show_status("左转(倒车)", current_speed, reverse_mode)
+                        left(0, current_speed)
+                    else:
+                        show_status("右转", current_speed, reverse_mode)
+                        right(current_speed, 0)
                     
                 elif key_input == 'q':
-                    show_status("原地左转", current_speed)
-                    spin_left(current_speed, current_speed)
+                    if reverse_mode:
+                        show_status("原地右转(倒车)", current_speed, reverse_mode)
+                        spin_right(current_speed, current_speed)
+                    else:
+                        show_status("原地左转", current_speed, reverse_mode)
+                        spin_left(current_speed, current_speed)
                     
                 elif key_input == 'e':
-                    show_status("原地右转", current_speed)
-                    spin_right(current_speed, current_speed)
+                    if reverse_mode:
+                        show_status("原地左转(倒车)", current_speed, reverse_mode)
+                        spin_left(current_speed, current_speed)
+                    else:
+                        show_status("原地右转", current_speed, reverse_mode)
+                        spin_right(current_speed, current_speed)
+                
+                elif key_input == 'r':
+                    # 切换倒车模式
+                    reverse_mode = not reverse_mode
+                    mode_text = "倒车模式已开启" if reverse_mode else "倒车模式已关闭"
+                    show_status(mode_text, current_speed, reverse_mode)
                     
                 elif key_input == ' ':
-                    show_status("停止", current_speed)
+                    show_status("停止", current_speed, reverse_mode)
                     brake()
                     
                 elif key_input in '123456789':
                     # 调整速度 (1-9 对应 10%-90%)
                     speed_level = int(key_input)
                     current_speed = speed_level * 10
-                    show_status("速度调整", current_speed)
+                    show_status("速度调整", current_speed, reverse_mode)
                     
                 elif key_input == '\x1b':  # ESC键
                     print("\n退出程序")
