@@ -762,7 +762,7 @@ def id_check():
     else:
         print("没有匹配结果")
 
-    return 0;
+    return 0
 
 
 def get_access_token():
@@ -822,42 +822,43 @@ try:
 
     # 任务1：考生人脸识别
     
-    set_camera_updown(180)
-    # pwm_UpDownServo.ChangeDutyCycle(180)
-    raise KeyError
-
-    while True:
-        for i in range(10):
-            set_camera_updown(180)
-            set_camera_leftright(90)
-            set_servo_angle(90)
-        time.sleep(0.5)
-        stop_camera_updown()
-        stop_camera_leftright()
-        stop_servo_angle()
-        key_scan()
-        if id_check():
-            whistle()
-            set_camera_updown(90)
-            stop_camera_updown()
-            break
-
-    # 任务2：S弯
-    # 实现方式：巡线模式
-    search_line_only()
-
-    # 任务3：直角转弯
-    # 实现方式：巡线模式
-
-    # 任务4：侧方停车
-    # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
-    parallel_parking()
-
-    # 任务5：避障
-    # 实现方式：先避障，再回到巡线模式
-    search_line()
-    avoid()
-    search_line_only()
+#     set_camera_updown(180)
+#     # pwm_UpDownServo.ChangeDutyCycle(180)
+#     pwm_
+#     raise KeyError
+#
+#     while True:
+#         for i in range(10):
+#             set_camera_updown(180)
+#             set_camera_leftright(90)
+#             set_servo_angle(90)
+#         time.sleep(0.5)
+#         stop_camera_updown()
+#         stop_camera_leftright()
+#         stop_servo_angle()
+#         key_scan()
+#         if id_check():
+#             whistle()
+#             set_camera_updown(90)
+#             stop_camera_updown()
+#             break
+#
+#     # 任务2：S弯
+#     # 实现方式：巡线模式
+#     search_line_only()
+#
+#     # 任务3：直角转弯
+#     # 实现方式：巡线模式
+#
+#     # 任务4：侧方停车
+#     # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
+#     parallel_parking()
+#
+#     # 任务5：避障
+#     # 实现方式：先避障，再回到巡线模式
+#     search_line()
+#     avoid()
+#     search_line_only()
 
     # 任务6：双线行驶，但在进入双线寻路循环前先行驶一段，驶离黑线
     #run(20, 20)
