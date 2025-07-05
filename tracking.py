@@ -21,6 +21,8 @@ TrackSensorLeftPin2  =  5   #定义左边第二个循迹红外传感器引脚为
 TrackSensorRightPin1 =  4   #定义右边第一个循迹红外传感器引脚为4口
 TrackSensorRightPin2 =  18  #定义右边第二个循迹红外传感器引脚为18口
 
+SENSOR_READING_MODE = "multiple_samples"
+
 #超声波引脚定义
 EchoPin = 0
 TrigPin = 1
