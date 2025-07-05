@@ -313,6 +313,9 @@ def avoid_obstacle():
     return True
 
 
+init()
+print("硬件初始化完成")
+
 #延时2s	
 # time.sleep(2)
 avoid_obstacle()
@@ -349,8 +352,6 @@ distance = Distance_test(ENVIRONMENT_TEMPERATURE)
 sound_speed = calculate_sound_speed(ENVIRONMENT_TEMPERATURE)
 
 try:
-    init()
-    print("硬件初始化完成")
     print("开始循迹避障测试...")
     print("-" * 50)
     
