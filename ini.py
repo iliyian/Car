@@ -44,6 +44,8 @@ def init():
     GPIO.setup(TrackSensorLeftPin2,GPIO.IN)
     GPIO.setup(TrackSensorRightPin1,GPIO.IN)
     GPIO.setup(TrackSensorRightPin2,GPIO.IN)
+    GPIO.setup(EchoPin,GPIO.IN)
+    GPIO.setup(TrigPin,GPIO.OUT)
     #设置pwm引脚和频率为2000hz
     pwm_ENA = GPIO.PWM(ENA, 2000)
     pwm_ENB = GPIO.PWM(ENB, 2000)
