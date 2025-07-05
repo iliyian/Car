@@ -693,7 +693,7 @@ def parallel_parking():
     back(15, 15)
     time.sleep(1.65)
     back_left(15)
-    time.sleep(0.75)
+    time.sleep(1.2)
     back(15, 15)
     time.sleep(0.1)
     spin_right(10,10)
