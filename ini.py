@@ -110,23 +110,137 @@ def brake():
     GPIO.output(IN2, GPIO.LOW)
     GPIO.output(IN3, GPIO.LOW)
     GPIO.output(IN4, GPIO.LOW)
-
-#try/except语句用来检测try语句块中的错误，
-#从而让except语句捕获异常信息并处理。
-try:
-    init()
-    print("硬件初始化完成")
-    print("=" * 50)
-    print("循迹程序启动")
-    print("=" * 50)
-    print("传感器状态说明:")
-    print("   • False/0 = 检测到黑线")
-    print("   • True/1 = 检测到白线")
-    print("   • 格式: L1 L2 R1 R2")
-    print("=" * 50)
     
-    # key_scan()
+#超声波引脚定义
+EchoPin = 0
+TrigPin = 1
+    
+# 超声波测距，如果为1000则未检测到
+# 由于实践中存在测距异常的情况（没有障碍，但是会偶然测到障碍），实现中每次测距会测3次，取平均值，其中只要有1次为1000就表示没检测到
+def Distance():
+    GPIO.output(TrigPin, GPIO.LOW)
+    time.sleep(0.000002)
+    GPIO.output(TrigPin, GPIO.HIGH)
+    time.sleep(0.000012)
+    GPIO.output(TrigPin, GPIO.LOW)
+    t3 = time.time()
+    while not GPIO.input(EchoPin):  # 等回音超过3ms，视为无关障碍
+        t4 = time.time()
+        if (t4 - t3) > 0.003:
+            return 1000
+    t1 = time.time()
+    while GPIO.input(EchoPin):  # 看回音持续了多久，超过3ms视为噪音
+        t5 = time.time()
+        if (t5 - t1) > 0.003:
+            return 1000
+
+    t2 = time.time()
+    k1 = ((t2 - t1) * 340 / 2) * 100
+    GPIO.output(TrigPin, GPIO.LOW)
+    time.sleep(0.000002)
+    GPIO.output(TrigPin, GPIO.HIGH)
+    time.sleep(0.000012)
+    GPIO.output(TrigPin, GPIO.LOW)
+    t3 = time.time()
+    while not GPIO.input(EchoPin):  # 等回音超过3ms，视为无关障碍
+        t4 = time.time()
+        if (t4 - t3) > 0.003:
+            return 1000
+    t1 = time.time()
+    while GPIO.input(EchoPin):  # 看回音持续了多久，超过3ms视为噪音
+        t5 = time.time()
+        if (t5 - t1) > 0.003:
+            return 1000
+
+    t2 = time.time()
+    k2 = ((t2 - t1) * 340 / 2) * 100
+
+    GPIO.output(TrigPin, GPIO.LOW)
+    time.sleep(0.000002)
+    GPIO.output(TrigPin, GPIO.HIGH)
+    time.sleep(0.000012)
+    GPIO.output(TrigPin, GPIO.LOW)
+    t3 = time.time()
+    while not GPIO.input(EchoPin):  # 等回音超过3ms，视为无关障碍
+        t4 = time.time()
+        if (t4 - t3) > 0.003:
+            return 1000
+    t1 = time.time()
+    while GPIO.input(EchoPin):  # 看回音持续了多久，超过3ms视为噪音
+        t5 = time.time()
+        if (t5 - t1) > 0.003:
+            return 1000
+
+    t2 = time.time()
+    k3 = ((t2 - t1) * 340 / 2) * 100
+    return (k1 + k2 + k3) / 3.0
+  
+#绕行函数
+def avoid_obstacle():
+    print("检测到障碍物，开始硬编码绕行...")
+    
+    # 停止前进
+    brake()
+    time.sleep(0.1)
+    
+    # 硬编码绕行动作序列
+    # 1. 原地右转90度
+    print("步骤1: 原地右转90度")
+    spin_right(40, 40)
+    time.sleep(0.405)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 2. 前进一段距离绕过障碍物
+    print("步骤2: 前进绕过障碍物")
+    run(35, 35)
+    time.sleep(0.5)  # 前进1秒
+    brake()
+    time.sleep(0.1)
+    
+    # 3. 原地左转90度
+    print("步骤3: 原地左转90度")
+    spin_left(40, 40)
+    time.sleep(0.405)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 4. 前进回到原路径
+    print("步骤4: 前进回到原路径")
+    run(35, 35)
+    time.sleep(1.0)  # 前进0.8秒
+    brake()
+    time.sleep(0.1)
+    
+    # 5. 原地左转90度
+    print("步骤5: 原地左转90度")
+    spin_left(40, 40)
+    time.sleep(0.5)  # 调整时间以达到90度
+    brake()
+    time.sleep(0.1)
+    
+    # 6. 前进回到循迹线
+    print("步骤6: 前进回到循迹线")
+    run(35, 35)
+    time.sleep(0.5)  # 前进0.5秒
+    brake()
+    
+    print("转弯")
+    spin_right(40, 40)
+    time.sleep(0.5)
+    brake()
+    time.sleep(0.1)
+    
+    print("硬编码绕行完成，继续循迹")
+    return True
+
+def search_line():
     while True:
+        distance = Distance()
+        print("距离: ", distance, end=' | ')
+        if distance < 20:
+            return
+
         #检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
         #未检测到黑线时循迹模块相应的指示灯灭，端口电平为HIGH
         TrackSensorLeftValue1  = GPIO.input(TrackSensorLeftPin1)
@@ -208,6 +322,25 @@ try:
         
         # 添加短暂延时，避免输出过快
         # time.sleep(0.1)
+
+#try/except语句用来检测try语句块中的错误，
+#从而让except语句捕获异常信息并处理。
+try:
+    init()
+    print("硬件初始化完成")
+    print("=" * 50)
+    print("循迹程序启动")
+    print("=" * 50)
+    print("传感器状态说明:")
+    print("   • False/0 = 检测到黑线")
+    print("   • True/1 = 检测到白线")
+    print("   • 格式: L1 L2 R1 R2")
+    print("=" * 50)
+    
+    search_line()
+    avoid_obstacle()
+    
+
 
 except KeyboardInterrupt:
     print("\n" + "=" * 50)
