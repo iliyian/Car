@@ -330,7 +330,7 @@ def search_line():
     while True:
         # 前方发现障碍，执行避障程序
         a = Distance()
-        print(a)
+        print("距离: {:.2f} cm".format(a), end=" | ")
         if a <= 30:
             print("发现障碍物，退出巡线模式！")
             return 1
@@ -341,6 +341,12 @@ def search_line():
         TrackSensorLeftValue2 = GPIO.input(TrackSensorLeftPin2)
         TrackSensorRightValue1 = GPIO.input(TrackSensorRightPin1)
         TrackSensorRightValue2 = GPIO.input(TrackSensorRightPin2)
+
+        # 显示传感器状态
+        sensor_status = "传感器状态: {} {} {} {}".format(
+            int(TrackSensorLeftValue1), int(TrackSensorLeftValue2),
+            int(TrackSensorRightValue1), int(TrackSensorRightValue2))
+        print(sensor_status, end=" | ")
 
         # 全黑，表示抵达特殊任务点，返回2
         if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
@@ -353,6 +359,7 @@ def search_line():
         # 0 1 X 0
         # 处理右锐角和右直角的转动
         if (TrackSensorLeftValue1 == False or TrackSensorLeftValue2 == False) and TrackSensorRightValue2 == False:
+            print("右锐角/右直角转动 - 原地右转(15,15)")
             spin_right(15, 15)
             set_color(1, 0, 0)
             time.sleep(0.08)
@@ -362,6 +369,7 @@ def search_line():
         # 0 X 1 0
         # 处理左锐角和左直角的转动
         elif TrackSensorLeftValue1 == False and (TrackSensorRightValue1 == False or TrackSensorRightValue2 == False):
+            print("左锐角/左直角转动 - 原地左转(15,15)")
             spin_left(15, 15)
             set_color(1, 0, 0)
             time.sleep(0.08)
@@ -369,6 +377,7 @@ def search_line():
         # 0 X X X
         # 最左边检测到
         elif TrackSensorLeftValue1 == False:
+            print("最左边检测到 - 原地左转(15,15)")
             spin_left(15, 15)
             set_color(0, 0, 0)
             # time.sleep(0.02)
@@ -376,6 +385,7 @@ def search_line():
         # X X X 0
         # 最右边检测到
         elif TrackSensorRightValue2 == False:
+            print("最右边检测到 - 原地右转(15,15)")
             spin_right(15, 15)
             set_color(0, 0, 0)
             # time.sleep(0.02)
@@ -383,20 +393,29 @@ def search_line():
         # X 0 1 X
         # 处理左小弯
         elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == True:
+            print("左小弯 - 左转(0,15)")
             left(0, 15)
             set_color(0, 0, 0)
 
         # X 1 0 X
         # 处理右小弯
         elif TrackSensorLeftValue2 == True and TrackSensorRightValue1 == False:
+            print("右小弯 - 右转(15,0)")
             right(15, 0)
             set_color(0, 0, 0)
 
         # X 0 0 X
         # 处理直线
         elif TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False:
+            print("直线行驶 - 前进(15,15)")
             run(15, 15)
             set_color(0, 0, 0)
+        
+        else:
+            print("保持上一状态 - 传感器状态: {} {} {} {}".format(
+                int(TrackSensorLeftValue1), int(TrackSensorLeftValue2),
+                int(TrackSensorRightValue1), int(TrackSensorRightValue2)))
+        
         # 当为1 1 1 1时小车保持上一个小车运行状态
 
 
