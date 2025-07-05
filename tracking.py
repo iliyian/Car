@@ -241,9 +241,9 @@ def get_tracking_action(L1, L2, R1, R2):
     if L1 == False:  # 最左边
         return ("最左边检测", 80, 80, False)
     if L2 == False:  # 左中
-        return ("左小弯", 0, 40, False)
+        return ("左小弯", 0, 20, False)
     if R1 == False:  # 右中
-        return ("右小弯", 40, 0, False)
+        return ("右小弯", 20, 0, False)
     if R2 == False:  # 最右边
         return ("最右边检测", 80, 80, False)
     
