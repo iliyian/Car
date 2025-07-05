@@ -240,7 +240,7 @@ def search_line():
     while True:
         distance = Distance()
         print("距离: ", distance, end=' | ')
-        if distance < 20:
+        if distance < 10:
             return
 
         #检测到黑线时循迹模块相应的指示灯亮，端口电平为LOW
