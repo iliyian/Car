@@ -265,28 +265,28 @@ def avoid_obstacle():
     # 1. 原地右转90度
     print("步骤1: 原地右转90度")
     spin_right(40, 40)
-    time.sleep(0.5)  # 调整时间以达到90度
+    time.sleep(0.405)  # 调整时间以达到90度
     brake()
     time.sleep(0.1)
     
     # 2. 前进一段距离绕过障碍物
     print("步骤2: 前进绕过障碍物")
     run(35, 35)
-    time.sleep(1.0)  # 前进1秒
+    time.sleep(0.5)  # 前进1秒
     brake()
     time.sleep(0.1)
     
     # 3. 原地左转90度
     print("步骤3: 原地左转90度")
     spin_left(40, 40)
-    time.sleep(0.5)  # 调整时间以达到90度
+    time.sleep(0.405)  # 调整时间以达到90度
     brake()
     time.sleep(0.1)
     
     # 4. 前进回到原路径
     print("步骤4: 前进回到原路径")
     run(35, 35)
-    time.sleep(0.8)  # 前进0.8秒
+    time.sleep(1.0)  # 前进0.8秒
     brake()
     time.sleep(0.1)
     
