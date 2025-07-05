@@ -32,12 +32,6 @@ SAFE_DISTANCE = 50      # 安全距离阈值（厘米）
 #环境温度设置（用于声速计算）
 ENVIRONMENT_TEMPERATURE = 25  # 环境温度（摄氏度）
 
-#传感器读取模式配置
-SENSOR_READING_MODE = "multiple_samples"  # 可选: "single", "multiple_samples", "timing_compensation"
-# single: 单次读取（原始方法）
-# multiple_samples: 多次采样多数表决
-# timing_compensation: 时序补偿（推荐，专门解决R2偏后问题）
-
 #设置GPIO口为BCM编码方式
 GPIO.setmode(GPIO.BCM)
 
@@ -298,10 +292,10 @@ def read_sensors_multiple_samples(sample_count=5, sample_interval=0.001):
     
     # 多数表决法确定最终状态
     # 如果False（黑线）的数量 >= True（白线）的数量，则判定为False
-    final_L1 = samples['L1'].count(False) >= samples['L1'].count(True)
-    final_L2 = samples['L2'].count(False) >= samples['L2'].count(True)
-    final_R1 = samples['R1'].count(False) >= samples['R1'].count(True)
-    final_R2 = samples['R2'].count(False) >= samples['R2'].count(True)
+    final_L1 = samples['L1'].count(False) <= samples['L1'].count(True)
+    final_L2 = samples['L2'].count(False) <= samples['L2'].count(True)
+    final_R1 = samples['R1'].count(False) <= samples['R1'].count(True)
+    final_R2 = samples['R2'].count(False) <= samples['R2'].count(True)
     
     # 调试信息：显示采样统计
     debug_info = "采样统计 - L1:{}/{} L2:{}/{} R1:{}/{} R2:{}/{}".format(
@@ -472,8 +466,8 @@ cnt = 0
 distance = Distance_test(ENVIRONMENT_TEMPERATURE)
 sound_speed = calculate_sound_speed(ENVIRONMENT_TEMPERATURE)
 
-print(GPIO.input(TrackSensorLeftPin1),GPIO.input(TrackSensorLeftPin2),GPIO.input(TrackSensorRightPin1),GPIO.input(TrackSensorRightPin2))
-raise Exception("测试")
+# print(GPIO.input(TrackSensorLeftPin1),GPIO.input(TrackSensorLeftPin2),GPIO.input(TrackSensorRightPin1),GPIO.input(TrackSensorRightPin2))
+# raise Exception("测试")
 
 try:
     print("开始循迹避障测试...")
