@@ -3,8 +3,16 @@ import re
 from gtts import gTTS
 import os
 
+def play_voice_prompt():
+    prompt_text = "请报出场次科目二考试考生的编号"
+    tts = gTTS(prompt_text, lang='zh')  # 使用中文语音
+    tts.save("prompt.mp3")
+    os.system("mpg321 prompt.mp3")  # 播放语音提示
+
 # 初始化语音识别器
 recognizer = sr.Recognizer()
+
+play_voice_prompt()
 
 # 使用麦克风作为输入源
 with sr.Microphone() as source:
@@ -15,14 +23,7 @@ with sr.Microphone() as source:
 # 将音频转换为文本
 print("Recognizing...")
 
-def play_voice_prompt():
-    prompt_text = "请报出场次科目二考试考生的编号"
-    tts = gTTS(prompt_text, lang='zh')  # 使用中文语音
-    tts.save("prompt.mp3")
-    os.system("mpg321 prompt.mp3")  # 播放语音提示
-
 try:
-    play_voice_prompt()
     
     # 使用 Google 语音识别 API 将语音转换为中文文本
     result = recognizer.recognize_google(audio, language="zh-CN", show_all=True)
