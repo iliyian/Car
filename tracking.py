@@ -205,12 +205,12 @@ def key_scan():
         while not GPIO.input(key):
             pass
 
-#优化的循迹逻辑判断函数
+#简化的循迹逻辑判断函数
 def get_tracking_action(L1, L2, R1, R2):
     """
-    根据四个传感器的状态返回相应的循迹动作
+    简化的循迹逻辑，只保留直角转向和直线行走
     参数: L1, L2, R1, R2 - 四个传感器的状态 (False=黑线, True=白线)
-    返回: (动作名称, 左轮速度, 右轮速度, 是否需要延时)
+    返回: (动作名称, 转向时间, 是否需要转向)
     """
     
     # 计算黑线数量
@@ -220,42 +220,18 @@ def get_tracking_action(L1, L2, R1, R2):
     
     # 特殊标识检测（全部黑线）
     if total_black == 4:
-        return ("特殊标识", 20, 20, True)
+        return ("特殊标识", 0, False)
     
-    # 直角转弯检测
-    if left_black >= 1 and right_black >= 1:
-        if left_black > right_black:
-            return ("左直角转弯", 50, 100, True)
-        elif left_black < right_black:
-            return ("右直角转弯", 100, 50, True)
-        else:
-            return ("直线行驶", 20, 20, False)
+    # 左转检测（左侧有黑线）
+    if left_black > 0 and right_black == 0:
+        return ("左转", 0.405, True)  # 使用避障函数中的转向时间
     
-    # 锐角转弯检测
-    if left_black >= 2:
-        return ("左锐角转弯", 40, 85, True)
-    if right_black >= 2:
-        return ("右锐角转弯", 85, 40, True)
+    # 右转检测（右侧有黑线）
+    if right_black > 0 and left_black == 0:
+        return ("右转", 0.405, True)  # 使用避障函数中的转向时间
     
-    # 单侧检测
-    if L1 == False:  # 最左边
-        return ("最左边检测", 40, 40, False)
-    if L2 == False:  # 左中
-        return ("左小弯", 0, 20, False)
-    if R1 == False:  # 右中
-        return ("右小弯", 20, 0, False)
-    if R2 == False:  # 最右边
-        return ("最右边检测", 40, 40, False)
-    
-    # 直线行驶
-    if L2 == False and R1 == False:
-        return ("直线行驶", 20, 20, False)
-    
-    if total_black == 0:
-        return ("直线", 20, 20, True)
-    
-    # 默认状态
-    return ("保持当前状态", 0, 0, False)
+    # 直线行驶（中间有黑线或无黑线）
+    return ("直线行驶", 0, False)
 
 #多次采样传感器读取函数（解决R2传感器偏后的时序问题）
 def read_sensors_multiple_samples(sample_count=5, sample_interval=0.001):
@@ -527,8 +503,8 @@ try:
             cnt += 1
             continue
         
-        # 使用优化的循迹逻辑
-        action_name, left_speed, right_speed, need_delay = get_tracking_action(
+        # 使用简化的循迹逻辑
+        action_name, turn_time, need_turn = get_tracking_action(
             TrackSensorLeftValue1, TrackSensorLeftValue2, 
             TrackSensorRightValue1, TrackSensorRightValue2)
         
@@ -536,24 +512,23 @@ try:
         
         # 执行相应的动作
         if action_name == "特殊标识":
-            run(left_speed, right_speed)
-        elif action_name in ["左直角转弯", "左锐角转弯", "最左边检测"]:
-            spin_left(left_speed, right_speed)
-        elif action_name in ["右直角转弯", "右锐角转弯", "最右边检测"]:
-            spin_right(left_speed, right_speed)
-        elif action_name == "左小弯":
-            left(left_speed, right_speed)
-        elif action_name == "右小弯":
-            right(left_speed, right_speed)
-        elif action_name == "直线行驶":
-            run(left_speed, right_speed)
-        else:  # 保持当前状态
-            pass
-            # brake()
-        
-        # 根据动作类型决定是否需要延时
-        if need_delay:
+            run(35, 35)  # 使用避障函数中的速度参数
+        elif action_name == "左转":
+            # 硬编码左转：使用避障函数中的参数
+            spin_left(40, 40)
+            time.sleep(turn_time)
+            brake()
             time.sleep(0.1)
+        elif action_name == "右转":
+            # 硬编码右转：使用避障函数中的参数
+            spin_right(40, 40)
+            time.sleep(turn_time)
+            brake()
+            time.sleep(0.1)
+        elif action_name == "直线行驶":
+            run(35, 35)  # 使用避障函数中的速度参数
+        else:
+            brake()
        
 except KeyboardInterrupt:
     print("\n" + "=" * 50)
