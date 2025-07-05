@@ -202,7 +202,7 @@ try:
         #当为1 1 1 1时小车保持上一个小车运行状态
         
         # 添加短暂延时，避免输出过快
-        time.sleep(0.1)
+        # time.sleep(0.1)
 
 except KeyboardInterrupt:
     print("\n" + "=" * 50)
