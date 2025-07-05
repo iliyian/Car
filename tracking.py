@@ -342,13 +342,13 @@ def read_sensors_with_timing_compensation():
     L1_votes = [L1_1, L1_2]
     L2_votes = [L2_1, L2_2]
     R1_votes = [R1_1, R1_2]
-    final_L1 = L1_votes.count(False) >= L1_votes.count(True)
-    final_L2 = L2_votes.count(False) >= L2_votes.count(True)
-    final_R1 = R1_votes.count(False) >= R1_votes.count(True)
+    final_L1 = L1_votes.count(False) <= L1_votes.count(True)
+    final_L2 = L2_votes.count(False) <= L2_votes.count(True)
+    final_R1 = R1_votes.count(False) <= R1_votes.count(True)
     
     # 对于R2：使用三轮采样的多数表决，并考虑时序补偿
     R2_votes = [R2_1, R2_2, R2_3]
-    final_R2 = R2_votes.count(False) >= R2_votes.count(True)
+    final_R2 = R2_votes.count(False) <= R2_votes.count(True)
     
     # 时序补偿逻辑：如果L1检测到黑线但R2没有，可能是R2还没检测到
     if not final_L1 and final_R2:  # L1=黑线，R2=白线
