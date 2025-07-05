@@ -481,6 +481,7 @@ try:
         print("前方距离: {:.1f} cm".format(distance), end=" | ")
         
         # 如果检测到障碍物，执行绕行
+        distance = Distance_test(ENVIRONMENT_TEMPERATURE)
         if distance < OBSTACLE_DISTANCE and cnt > 0:
             print("检测到障碍物！")
             if avoid_obstacle():
