@@ -990,7 +990,6 @@ try:
     # 任务_plus：避障
     # 实现方式：先避障，再回到巡线模式
     voice_avoid_obstacle()
-    time.sleep(2.0)
     
     run(15,15)
     time.sleep(0.5)
@@ -1000,18 +999,18 @@ try:
 
     # 任务2：倒车入库
     voice_play(2)
-    time.sleep(2.0)
     park()
 
     # 任务3：曲线
-    voice_play(3)
-    time.sleep(2.0)
     
     run(20, 20)
     time.sleep(0.6)
     spin_left(15,15)
     time.sleep(0.1)
     search_line_only(4)
+    
+    voice_play(3)
+    
     run(10,10)
     time.sleep(0.2)
     status = Status()
@@ -1027,7 +1026,6 @@ try:
     # 任务4：侧方停车
     # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
     voice_play(4)
-    time.sleep(2.0)
     
     search_line_only(5)
     parallel_parking()
@@ -1054,7 +1052,6 @@ try:
 
     # 任务5：庆祝通过
     voice_play(5)
-    time.sleep(3.0)
     
     # for pos in range(181):
     #     set_servo_angle(pos)
