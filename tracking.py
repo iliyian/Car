@@ -318,8 +318,8 @@ print("硬件初始化完成")
 
 #延时2s	
 # time.sleep(2)
-avoid_obstacle()
-raise Exception("测试")
+# avoid_obstacle()
+# raise Exception("测试")
 
 print("=" * 50)
 print("循迹避障测试程序启动")
