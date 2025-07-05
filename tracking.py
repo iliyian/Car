@@ -343,9 +343,12 @@ def read_sensors_with_timing_compensation():
     
     # 确定最终状态
     # 对于L1, L2, R1：使用前两轮采样的多数表决
-    final_L1 = (L1_1 + L1_2) >= 1  # 如果两轮中有1轮或以上为True，则判定为True
-    final_L2 = (L2_1 + L2_2) >= 1
-    final_R1 = (R1_1 + R1_2) >= 1
+    L1_votes = [L1_1, L1_2]
+    L2_votes = [L2_1, L2_2]
+    R1_votes = [R1_1, R1_2]
+    final_L1 = L1_votes.count(False) >= L1_votes.count(True)
+    final_L2 = L2_votes.count(False) >= L2_votes.count(True)
+    final_R1 = R1_votes.count(False) >= R1_votes.count(True)
     
     # 对于R2：使用三轮采样的多数表决，并考虑时序补偿
     R2_votes = [R2_1, R2_2, R2_3]
@@ -468,6 +471,9 @@ print("=" * 50)
 cnt = 0
 distance = Distance_test(ENVIRONMENT_TEMPERATURE)
 sound_speed = calculate_sound_speed(ENVIRONMENT_TEMPERATURE)
+
+print(read_sensors_multiple_samples())
+raise Exception("测试")
 
 try:
     print("开始循迹避障测试...")
