@@ -524,11 +524,11 @@ try:
             (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_with_timing_compensation()
         
         # 显示传感器状态、采样统计和测距结果
-        # sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{} | 测距: {:.1f}cm".format(
-        #     TrackSensorLeftValue1, TrackSensorLeftValue2, 
-        #     TrackSensorRightValue1, TrackSensorRightValue2, distance)
-        # print(sensor_status, end=" | ")
-        print(debug_info, end=" | ")
+        sensor_status = "传感器状态: L1:{} L2:{} R1:{} R2:{} | 测距: {:.1f}cm".format(
+            TrackSensorLeftValue1, TrackSensorLeftValue2, 
+            TrackSensorRightValue1, TrackSensorRightValue2, distance)
+        print(sensor_status, end=" | ")
+        # print(debug_info, end=" | ")
         
         # 特殊标识处理
         if TrackSensorLeftValue1 == False and TrackSensorLeftValue2 == False and TrackSensorRightValue1 == False and TrackSensorRightValue2 == False:
