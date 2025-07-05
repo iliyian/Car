@@ -189,7 +189,7 @@ def avoid_obstacle():
     # 1. 原地右转90度
     print("步骤1: 原地右转90度")
     spin_right(40, 40)
-    time.sleep(0.395)  # 调整时间以达到90度
+    time.sleep(0.355)  # 调整时间以达到90度
     brake()
     time.sleep(0.1)
     
@@ -203,7 +203,7 @@ def avoid_obstacle():
     # 3. 原地左转90度
     print("步骤3: 原地左转90度")
     spin_left(40, 40)
-    time.sleep(0.395)  # 调整时间以达到90度
+    time.sleep(0.355)  # 调整时间以达到90度
     brake()
     time.sleep(0.1)
     
