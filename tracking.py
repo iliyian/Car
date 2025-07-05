@@ -262,7 +262,7 @@ def get_tracking_action(L1, L2, R1, R2):
     return ("保持当前状态", 0, 0, False)
 
 #多次采样传感器读取函数（解决R2传感器偏后的时序问题）
-def read_sensors_multiple_samples(sample_count=5, sample_interval=0.01):
+def read_sensors_multiple_samples(sample_count=5, sample_interval=0.001):
     """
     多次采样读取传感器状态，采用多数表决法
     参数: 
@@ -312,23 +312,6 @@ def read_sensors_multiple_samples(sample_count=5, sample_interval=0.01):
     )
     
     return (final_L1, final_L2, final_R1, final_R2), debug_info
-
-#智能传感器读取函数（根据速度自适应采样）
-def read_sensors_adaptive(speed_level="normal"):
-    """
-    根据小车速度自适应调整采样策略
-    参数: speed_level - 速度级别 ("slow", "normal", "fast")
-    返回: (L1, L2, R1, R2) - 四个传感器的最终状态
-    """
-    if speed_level == "slow":
-        # 低速时使用较少采样，快速响应
-        return read_sensors_multiple_samples(sample_count=3, sample_interval=0.005)
-    elif speed_level == "fast":
-        # 高速时使用更多采样，提高准确性
-        return read_sensors_multiple_samples(sample_count=7, sample_interval=0.015)
-    else:
-        # 正常速度使用默认采样
-        return read_sensors_multiple_samples(sample_count=5, sample_interval=0.01)
 
 #时序补偿传感器读取函数（专门处理R2传感器偏后问题）
 def read_sensors_with_timing_compensation():
@@ -517,8 +500,7 @@ try:
             debug_info = "单次读取模式"
         elif SENSOR_READING_MODE == "multiple_samples":
             # 多次采样多数表决
-            current_speed_level = "normal"
-            (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_adaptive(current_speed_level)
+            (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_multiple_samples()
         else:
             # 时序补偿（默认推荐方法）
             (TrackSensorLeftValue1, TrackSensorLeftValue2, TrackSensorRightValue1, TrackSensorRightValue2), debug_info = read_sensors_with_timing_compensation()
