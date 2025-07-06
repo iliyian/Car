@@ -47,7 +47,7 @@ HTTPS_PROXY = os.environ.get("https_proxy", "")
 # 图片保存的文件夹
 IMGS_DIR = "imgs"
 
-API_KEY = "hux9tzno5WcO00k0cMWu7k69"
+# API_KEY = "hux9tzno5WcO00k0cMWu7k69"
 SECRET_KEY = "DI1QwKbl1NX4UZWojVGMYYSq4HWwyomm"
 
 POSTCAL_CODE = 330106 # 杭州市西湖区
@@ -1497,6 +1497,10 @@ def stop_web_server():
 try:
     print("=== 科目二考试系统启动 ===")
     print("正在初始化系统...")
+    
+    # 记录开始时间
+    start_time = time.time()
+    
     init()
     print("系统初始化完成")
     
@@ -1640,6 +1644,16 @@ try:
     # 发送考试通过通知邮件（简单通知，不带附件）
     send_mail(RECEIVER_EMAIL, "科目二考试通过！", "恭喜您科目二考试通过！祝您早日取得驾照！")
     voice_play(5)
+    # 计算耗时并格式化
+    total_seconds = int(time.time() - start_time)
+    if total_seconds >= 60:
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        time_str = f"耗时：{minutes}分{seconds}秒"
+    else:
+        time_str = f"耗时：{total_seconds}秒"
+    voice(time_str)
+    print(time_str)
     print("庆祝流程完成")
     
     # for pos in range(181):
