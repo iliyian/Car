@@ -1145,6 +1145,7 @@ def camera_scan():
     return None
 
 def id_check():
+    print("begin id check")
     voice("请出示身份证")
     desp = camera_scan()
     if desp and ("黄" in desp or "雨" in desp or "风" in desp or "阳" in desp):
@@ -1158,9 +1159,11 @@ try:
     
     while True:
         if id_check():
+            print("id check success")
             voice("身份认证成功，请开始考试。")
             break
         else:
+            print("id check failed")
             voice("身份认证失败，请重新认证。")
 
     raise Exception("测试")
