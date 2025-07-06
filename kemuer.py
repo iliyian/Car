@@ -1,4 +1,3 @@
-
 # -*- coding:UTF-8 -*-
 import RPi.GPIO as GPIO
 import time
@@ -948,6 +947,43 @@ def voice_avoid_obstacle():
     tts.save("avoid_obstacle.mp3")
     os.system("mpg321 avoid_obstacle.mp3")
 
+def send_mail(recipient, subject, text):
+    sender = '1715428260@qq.com'
+    # code = os.getenv('EMAIL_AUTH_CODE')
+    code = 'ykhcgebrmmdrijca'
+    
+    # 检查是否获取到授权码
+    if not code:
+        print("错误：未找到邮箱授权码，请设置环境变量 EMAIL_AUTH_CODE")
+        return False
+    
+    try:
+        # 创建邮件对象
+        msg = MIMEText(text, 'plain', 'utf-8')
+        msg['From'] = sender
+        msg['To'] = recipient
+        msg['Subject'] = Header(subject, 'utf-8')
+        
+        # 连接到QQ邮箱SMTP服务器
+        server = smtplib.SMTP_SSL('smtp.qq.com', 465)
+        server.login(sender, code)
+        
+        # 发送邮件
+        server.sendmail(sender, [recipient], msg.as_string())
+        server.quit()
+        
+        print(f"邮件发送成功！收件人：{recipient}, 主题：{subject}, 内容：{text}")
+        return True
+        
+    except Exception as e:
+        print(f"邮件发送失败：{str(e)}")
+        return False
+    
+# send_mail("sqzrmhj@gmail.com", "测试邮件", "这是一封测试邮件")
+# raise Exception("测试")
+
+
+
 # try/except语句用来检测try语句块中的错误，
 # 从而让except语句捕获异常信息并处理。
 try:
@@ -1052,7 +1088,10 @@ try:
 #             break
 
     # 任务5：庆祝通过
+    
+    send_mail("sqzrmhj@gmail.com", "科目二考试通过！", "恭喜您科目二考试通过！")
     voice_play(5)
+    
     
     # for pos in range(181):
     #     set_servo_angle(pos)
