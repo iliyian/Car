@@ -27,10 +27,13 @@ import httpx
 # API 密钥将从环境变量 "OPENAI_API_KEY" 中读取，以提高安全性。
 # 在运行脚本前，请先设置该环境变量。
 API_KEY = os.environ.get("OPENAI_API_KEY") 
+WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
+EMAIL_AUTH_CODE = os.getenv('EMAIL_AUTH_CODE')
 # 您想要使用的模型
 MODEL = "google/gemini-2.5-flash"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
 BASE_URL = "https://openrouter.ai/api/v1"
+WEATHER_API = "https://restapi.amap.com/v3/weather/weatherInfo?"
 # 如果您需要通过HTTPS代理访问，请在此处设置代理地址，例如 "http://127.0.0.1:7890"
 # 如果不需要代理，请将其留空 ""
 HTTPS_PROXY = os.environ.get("https_proxy", "")
@@ -39,6 +42,13 @@ IMGS_DIR = "imgs"
 
 API_KEY = "hux9tzno5WcO00k0cMWu7k69"
 SECRET_KEY = "DI1QwKbl1NX4UZWojVGMYYSq4HWwyomm"
+
+POSTCAL_CODE = 330106 # 杭州市西湖区
+
+speed_of_sound = 0 # 声速
+temperature = 0 # 温度
+weather_info = None # 天气信息
+
 # 设置GPIO口为BCM编码方式
 GPIO.setmode(GPIO.BCM)
 
@@ -115,7 +125,7 @@ def Distance():
             return 1000
 
     t2 = time.time()
-    k1 = ((t2 - t1) * 340 / 2) * 100
+    k1 = ((t2 - t1) * speed_of_sound / 2) * 100
     GPIO.output(TrigPin, GPIO.LOW)
     time.sleep(0.000002)
     GPIO.output(TrigPin, GPIO.HIGH)
@@ -133,7 +143,7 @@ def Distance():
             return 1000
 
     t2 = time.time()
-    k2 = ((t2 - t1) * 340 / 2) * 100
+    k2 = ((t2 - t1) * speed_of_sound / 2) * 100
 
     GPIO.output(TrigPin, GPIO.LOW)
     time.sleep(0.000002)
@@ -152,7 +162,7 @@ def Distance():
             return 1000
 
     t2 = time.time()
-    k3 = ((t2 - t1) * 340 / 2) * 100
+    k3 = ((t2 - t1) * speed_of_sound / 2) * 100
     return (k1 + k2 + k3) / 3.0
 
 
@@ -349,6 +359,32 @@ def init():
     pwm_Rled.start(0)
     pwm_Gled.start(0)
     pwm_Bled.start(0)
+    
+    global speed_of_sound
+    global temperature
+    global weather_info
+    
+    try:
+        if WEATHER_API_KEY:
+            response = requests.get(WEATHER_API, params={"city": POSTCAL_CODE, "key": WEATHER_API_KEY})
+            weather_info = response.json()
+            
+            if 'lives' in weather_info and len(weather_info['lives']) > 0:
+                temperature = int(weather_info["lives"][0]["temperature"])
+                speed_of_sound = 331.4 + 0.6 * temperature
+                print(f"天气信息获取成功，温度：{temperature}℃，声速：{speed_of_sound}m/s")
+            else:
+                print("天气API返回数据格式错误")
+                temperature = 20  # 默认温度
+                speed_of_sound = 331.4 + 0.6 * temperature
+        else:
+            print("未设置天气API密钥，使用默认温度20℃")
+            temperature = 20  # 默认温度
+            speed_of_sound = 331.4 + 0.6 * temperature
+    except Exception as e:
+        print(f"获取天气信息失败：{e}")
+        temperature = 20  # 默认温度
+        speed_of_sound = 331.4 + 0.6 * temperature
 
 
 # 巡线模式，在遇到全黑或者距离障碍物小于40cm的时候退出程序
@@ -964,15 +1000,16 @@ def voice_play(id):
 
 def voice(prompt_text):
     tts = gTTS(prompt_text, lang='zh')  # 使用中文语音
-    tts.save(f"{prompt_text}.mp3")
-    os.system(f"mpg321 {prompt_text}.mp3")
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    filename = f"voice_{timestamp}.mp3"
+    tts.save(filename)
+    os.system(f"mpg321 {filename}")
 
 def send_mail(recipient, subject, text):
     sender = '1715428260@qq.com'
-    code = os.getenv('EMAIL_AUTH_CODE')
     
     # 检查是否获取到授权码
-    if not code:
+    if not EMAIL_AUTH_CODE:
         print("错误：未找到邮箱授权码，请设置环境变量 EMAIL_AUTH_CODE")
         return False
     
@@ -985,7 +1022,7 @@ def send_mail(recipient, subject, text):
         
         # 连接到QQ邮箱SMTP服务器
         server = smtplib.SMTP_SSL('smtp.qq.com', 465)
-        server.login(sender, code)
+        server.login(sender, EMAIL_AUTH_CODE)
         
         # 发送邮件
         server.sendmail(sender, [recipient], msg.as_string())
@@ -1152,10 +1189,25 @@ def id_check():
         return True
     return False
 
+def play_weather():
+    if weather_info and 'lives' in weather_info and len(weather_info['lives']) > 0:
+        text = "当前时间：" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        text += f"，当前天气：{weather_info['lives'][0]['weather']}，温度：{weather_info['lives'][0]['temperature']}℃"
+        text += f"，计算声速为：{speed_of_sound}米/秒"
+        voice(text)
+    else:
+        print("天气信息获取失败，无法播报天气")
+        voice("天气信息获取失败")
+
 # try/except语句用来检测try语句块中的错误，
 # 从而让except语句捕获异常信息并处理。
 try:
     init()
+    
+    # 播报天气信息
+    play_weather()
+    
+    raise Exception("测试")
     
     while True:
         if id_check():
@@ -1166,7 +1218,6 @@ try:
             print("id check failed")
             voice("身份认证失败，请重新认证。")
 
-    raise Exception("测试")
     voice_welcome()
 
     # 任务1：考生人脸识别
