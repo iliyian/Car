@@ -24,7 +24,6 @@ with sr.Microphone() as source:
 print("Recognizing...")
 
 try:
-    
     # 使用 Google 语音识别 API 将语音转换为中文文本
     result = recognizer.recognize_google(audio, language="zh-CN", show_all=True)
     print("Recognized speech content:", result)

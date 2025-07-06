@@ -5,6 +5,9 @@ from aip import AipFace
 import threading
 import smtplib  # 导入smtp模块-
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 from email.header import Header
 import requests
 import base64
@@ -37,6 +40,7 @@ MODEL = "google/gemini-2.5-flash"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
 BASE_URL = "https://openrouter.ai/api/v1"
 WEATHER_API = "https://restapi.amap.com/v3/weather/weatherInfo?"
+RECEIVER_EMAIL = "sqzrmhj@gmail.com"
 # 如果您需要通过HTTPS代理访问，请在此处设置代理地址，例如 "http://127.0.0.1:7890"
 # 如果不需要代理，请将其留空 ""
 HTTPS_PROXY = os.environ.get("https_proxy", "")
@@ -54,27 +58,82 @@ weather_info = None # 天气信息
 
 # 设置日志系统
 def setup_logging():
+    global current_log_file
     # 创建logs目录
     if not os.path.exists('logs'):
         os.makedirs('logs')
     
     # 生成日志文件名（包含时间戳）
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    log_filename = f"logs/car_exam_{timestamp}.log"
+    current_log_file = f"logs/car_exam_{timestamp}.log"
     
     # 配置日志格式
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(log_filename, encoding='utf-8'),
+            logging.FileHandler(current_log_file, encoding='utf-8'),
             logging.StreamHandler()  # 同时输出到控制台
         ]
     )
     return logging.getLogger(__name__)
 
+# 获取当前日志文件路径的全局变量
+current_log_file = None
+
 # 初始化日志系统
 logger = setup_logging()
+
+def send_system_log(exam_status="系统运行完成"):
+    """发送系统日志邮件"""
+    try:
+        log_file = current_log_file
+        if not os.path.exists(log_file):
+            print(f"警告：日志文件不存在 - {log_file}")
+            return False
+        
+        # 获取日志文件信息
+        file_size = os.path.getsize(log_file)
+        file_size_mb = file_size / (1024 * 1024)
+        
+        # 构造邮件内容
+        end_time = time.strftime("%Y-%m-%d %H:%M:%S")
+        subject = f"科目二考试系统运行日志 - {end_time}"
+        
+        email_content = f"""
+科目二考试系统运行报告
+
+系统状态：{exam_status}
+
+系统信息：
+- 结束时间：{end_time}
+- 日志文件：{os.path.basename(log_file)}
+- 文件大小：{file_size_mb:.2f} MB
+- 环境温度：{temperature}℃
+- 计算声速：{speed_of_sound:.2f} m/s
+
+附件包含完整的系统运行日志，包括：
+- 系统初始化记录
+- 身份验证过程
+- 考试项目执行详情
+- 传感器数据记录
+- 错误和异常信息
+
+此邮件由科目二考试系统自动发送。
+        """
+        
+        success = send_mail(RECEIVER_EMAIL, subject, email_content.strip(), log_file)
+        
+        if success:
+            print("系统日志邮件发送成功")
+        else:
+            print("系统日志邮件发送失败")
+            
+        return success
+        
+    except Exception as e:
+        print(f"发送系统日志时发生错误：{str(e)}")
+        return False
 
 # 重写print函数，使其既输出到控制台又保存到日志
 def print(*args, **kwargs):
@@ -1054,7 +1113,7 @@ def voice(prompt_text):
     except Exception as e:
         print(f"语音播报失败：{str(e)}")
 
-def send_mail(recipient, subject, text):
+def send_mail(recipient, subject, text, attachment_path=None):
     sender = '1715428260@qq.com'
     
     print(f"准备发送邮件 - 收件人：{recipient}, 主题：{subject}")
@@ -1066,10 +1125,33 @@ def send_mail(recipient, subject, text):
     
     try:
         # 创建邮件对象
-        msg = MIMEText(text, 'plain', 'utf-8')
+        msg = MIMEMultipart()
         msg['From'] = sender
         msg['To'] = recipient
         msg['Subject'] = Header(subject, 'utf-8')
+        
+        # 添加邮件正文
+        msg.attach(MIMEText(text, 'plain', 'utf-8'))
+        
+        # 如果有附件，添加附件
+        if attachment_path and os.path.exists(attachment_path):
+            print(f"正在添加附件：{attachment_path}")
+            with open(attachment_path, "rb") as attachment:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+                
+            # 对附件进行编码
+            encoders.encode_base64(part)
+            
+            # 添加附件头信息
+            filename = os.path.basename(attachment_path)
+            part.add_header(
+                'Content-Disposition',
+                f'attachment; filename= {filename}',
+            )
+            
+            msg.attach(part)
+            print(f"附件添加成功：{filename}")
         
         print("正在连接邮箱服务器...")
         # 连接到QQ邮箱SMTP服务器
@@ -1088,7 +1170,7 @@ def send_mail(recipient, subject, text):
         print(f"邮件发送失败：{str(e)}")
         return False
     
-# send_mail("sqzrmhj@gmail.com", "测试邮件", "这是一封测试邮件")
+# send_mail(RECEIVER_EMAIL, "测试邮件", "这是一封测试邮件")
 # raise Exception("测试")
 
 # 初始化 OpenAI 客户端
@@ -1418,14 +1500,8 @@ try:
     init()
     print("系统初始化完成")
     
-    
-    print("=== 启动实时监控系统 ===")
-    # 在后台线程中启动Web服务器
-    web_server_thread = threading.Thread(target=start_web_server, daemon=True)
-    web_server_thread.start()
-    
-    # 等待服务器启动
-    voice("实时监控系统已启动")
+    # 默认状态为正常完成
+    exam_status = "考试正常完成"
     
     print("=== 开始身份验证流程 ===")
     while True:
@@ -1437,7 +1513,13 @@ try:
             print("身份验证失败，请重新尝试")
             voice("身份认证失败，请重新认证。")
             
-    #
+    print("=== 启动实时监控系统 ===")
+    # 在后台线程中启动Web服务器
+    web_server_thread = threading.Thread(target=start_web_server, daemon=True)
+    web_server_thread.start()
+    
+    # 等待服务器启动
+    voice("实时监控系统已启动")
 
     print("=== 开始语音欢迎流程 ===")
     voice_welcome()
@@ -1555,7 +1637,8 @@ try:
     # 任务5：庆祝通过
     print("=== 所有任务完成，考试通过！ ===")
     
-    send_mail("sqzrmhj@gmail.com", "科目二考试通过！", "恭喜您科目二考试通过！")
+    # 发送考试通过通知邮件（简单通知，不带附件）
+    send_mail(RECEIVER_EMAIL, "科目二考试通过！", "恭喜您科目二考试通过！祝您早日取得驾照！")
     voice_play(5)
     print("庆祝流程完成")
     
@@ -1594,9 +1677,11 @@ try:
 except KeyboardInterrupt:
     print("=== 程序被用户中断 ===")
     print("正在清理资源...")
+    exam_status = "程序被用户中断"
 except Exception as e:
     print(f"=== 程序发生异常：{str(e)} ===")
     print("正在清理资源...")
+    exam_status = f"程序异常退出：{str(e)}"
 finally:
     print("正在停止Web服务器...")
     try:
@@ -1619,5 +1704,11 @@ finally:
         print("GPIO清理完成")
     except:
         print("GPIO清理时发生错误")
+    
+    print("=== 发送系统日志 ===")
+    try:
+        send_system_log(exam_status)
+    except:
+        print("发送系统日志时发生错误")
     
     print("=== 程序结束 ===")
