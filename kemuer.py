@@ -971,7 +971,6 @@ def voice_avoid_obstacle():
 def send_mail(recipient, subject, text):
     sender = '1715428260@qq.com'
     code = os.getenv('EMAIL_AUTH_CODE')
-    # code = 'ykhcgebrmmdrijca'
     
     # 检查是否获取到授权码
     if not code:
