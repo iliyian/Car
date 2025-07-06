@@ -15,6 +15,7 @@ import speech_recognition as sr
 import re
 from gtts import gTTS
 import os
+import logging
 
 import openai
 import base64
@@ -48,6 +49,43 @@ POSTCAL_CODE = 330106 # 杭州市西湖区
 speed_of_sound = 0 # 声速
 temperature = 0 # 温度
 weather_info = None # 天气信息
+
+# 设置日志系统
+def setup_logging():
+    # 创建logs目录
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+    
+    # 生成日志文件名（包含时间戳）
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    log_filename = f"logs/car_exam_{timestamp}.log"
+    
+    # 配置日志格式
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_filename, encoding='utf-8'),
+            logging.StreamHandler()  # 同时输出到控制台
+        ]
+    )
+    return logging.getLogger(__name__)
+
+# 初始化日志系统
+logger = setup_logging()
+
+# 重写print函数，使其既输出到控制台又保存到日志
+def print(*args, **kwargs):
+    # 将所有参数转换为字符串并连接
+    message = ' '.join(str(arg) for arg in args)
+    
+    # 处理end参数
+    end = kwargs.get('end', '\n')
+    if end != '\n':
+        message += end
+    
+    # 使用logger输出（会同时输出到控制台和文件）
+    logger.info(message)
 
 # 设置GPIO口为BCM编码方式
 GPIO.setmode(GPIO.BCM)
@@ -999,14 +1037,25 @@ def voice_play(id):
     os.system("mpg321 ./music/" + str(id) + ".mp3")
 
 def voice(prompt_text):
-    tts = gTTS(prompt_text, lang='zh')  # 使用中文语音
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    filename = f"voice_{timestamp}.mp3"
-    tts.save(filename)
-    os.system(f"mpg321 {filename}")
+    print(f"语音播报：{prompt_text}")
+    try:
+        tts = gTTS(prompt_text, lang='zh')  # 使用中文语音
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        filename = f"voice_{timestamp}.mp3"
+        
+        print(f"正在生成语音文件：{filename}")
+        tts.save(filename)
+        
+        print("正在播放语音...")
+        os.system(f"mpg321 {filename}")
+        print("语音播放完成")
+    except Exception as e:
+        print(f"语音播报失败：{str(e)}")
 
 def send_mail(recipient, subject, text):
     sender = '1715428260@qq.com'
+    
+    print(f"准备发送邮件 - 收件人：{recipient}, 主题：{subject}")
     
     # 检查是否获取到授权码
     if not EMAIL_AUTH_CODE:
@@ -1020,15 +1069,17 @@ def send_mail(recipient, subject, text):
         msg['To'] = recipient
         msg['Subject'] = Header(subject, 'utf-8')
         
+        print("正在连接邮箱服务器...")
         # 连接到QQ邮箱SMTP服务器
         server = smtplib.SMTP_SSL('smtp.qq.com', 465)
         server.login(sender, EMAIL_AUTH_CODE)
         
+        print("正在发送邮件...")
         # 发送邮件
         server.sendmail(sender, [recipient], msg.as_string())
         server.quit()
         
-        print(f"邮件发送成功！收件人：{recipient}, 主题：{subject}, 内容：{text}")
+        print(f"邮件发送成功！收件人：{recipient}, 主题：{subject}")
         return True
         
     except Exception as e:
@@ -1062,12 +1113,15 @@ def capture_image_from_camera(save_dir):
     :param save_dir: 图片保存的目录。
     :return: 保存的图片路径，如果失败则返回 None。
     """
+    print(f"开始拍照流程 - 保存目录：{save_dir}")
+    
     # 确保保存目录存在
     if not os.path.exists(save_dir):
         print(f"创建目录: {save_dir}")
         os.makedirs(save_dir)
         
     # 0 代表系统默认的摄像头
+    print("正在初始化摄像头...")
     cap = cv2.VideoCapture(0)
     
     if not cap.isOpened():
@@ -1102,6 +1156,7 @@ def capture_image_from_camera(save_dir):
     # 释放摄像头资源
     cap.release()
     cv2.destroyAllWindows()
+    print("摄像头资源已释放")
     
     return image_path
 
@@ -1182,18 +1237,26 @@ def camera_scan():
     return None
 
 def id_check():
-    print("begin id check")
+    print("开始身份验证")
     voice("请出示身份证")
+    print("正在调用摄像头扫描身份证...")
     desp = camera_scan()
-    if desp and ("黄" in desp or "雨" in desp or "风" in desp or "阳" in desp):
-        return True
+    if desp:
+        print(f"身份证识别结果：{desp}")
+        if "黄" in desp or "雨" in desp or "风" in desp or "阳" in desp:
+            print("身份证验证通过")
+            return True
+        else:
+            print("身份证验证失败：未找到关键字")
+    else:
+        print("身份证识别失败：无法获取识别结果")
     return False
 
 def play_weather():
     if weather_info and 'lives' in weather_info and len(weather_info['lives']) > 0:
         text = "时间：" + time.strftime("%Y-%m-%d %H:%M", time.localtime())
         text += f"，天气：{weather_info['lives'][0]['weather']}，气温：{weather_info['lives'][0]['temperature']}℃"
-        text += f"，计算声速：{int(speed_of_sound)}米/秒"
+        text += f"，计算声速：{int(speed_of_sound)}米每秒"
         voice(text)
         if temperature > 30:
             voice("天气炎热，请考生做好防暑措施。")
@@ -1206,23 +1269,27 @@ def play_weather():
 # try/except语句用来检测try语句块中的错误，
 # 从而让except语句捕获异常信息并处理。
 try:
+    print("=== 科目二考试系统启动 ===")
+    print("正在初始化系统...")
     init()
+    print("系统初始化完成")
     
-    # 播报天气信息
-    play_weather()
-    
-    raise Exception("测试")
-    
+    print("=== 开始身份验证流程 ===")
     while True:
         if id_check():
-            print("id check success")
+            print("身份验证成功")
             voice("身份认证成功，请开始考试。")
             break
         else:
-            print("id check failed")
+            print("身份验证失败，请重新尝试")
             voice("身份认证失败，请重新认证。")
 
+    print("=== 开始语音欢迎流程 ===")
     voice_welcome()
+    
+    print("=== 播报天气信息 ===")
+    # 播报天气信息
+    play_weather()
 
     # 任务1：考生人脸识别
     
@@ -1251,13 +1318,16 @@ try:
 #     # 实现方式：巡线模式
 
 
+    print("=== 开始科目二考试项目 ===")
+    
     # 任务1：直角转弯
-    # 实现方式：巡线模式
+    print("--- 任务1：直角转弯 ---")
     voice_play(1)
     search_line_only(1)
+    print("直角转弯任务完成")
 
     # 任务_plus：避障
-    # 实现方式：先避障，再回到巡线模式
+    print("--- 任务加分项：障碍绕行 ---")
     voice("下一项目：障碍绕行。请准备。")
     
     run(15,15)
@@ -1265,12 +1335,16 @@ try:
     search_line(2)
     avoid()
     search_line_only(3)
+    print("障碍绕行任务完成")
 
     # 任务2：倒车入库
+    print("--- 任务2：倒车入库 ---")
     voice_play(2)
     park()
+    print("倒车入库任务完成")
 
     # 任务3：曲线
+    print("--- 任务3：曲线行驶 ---")
     
     run(20, 20)
     time.sleep(0.6)
@@ -1291,15 +1365,17 @@ try:
             run(15,15)
             time.sleep(1)
             break
+    print("曲线行驶任务完成")
 
     # 任务4：侧方停车
-    # 实现方式：巡线时遇到黑色横线，表示特殊任务触发
+    print("--- 任务4：侧方停车 ---")
     
     search_line_only(5)
     voice_play(4)
     
     parallel_parking()
     search_line_only(6)
+    print("侧方停车任务完成")
 
 
     # 任务8：再次人脸识别并提交考核成绩（发送邮件给考生）
@@ -1321,9 +1397,11 @@ try:
 #             break
 
     # 任务5：庆祝通过
+    print("=== 所有任务完成，考试通过！ ===")
     
     send_mail("sqzrmhj@gmail.com", "科目二考试通过！", "恭喜您科目二考试通过！")
     voice_play(5)
+    print("庆祝流程完成")
     
     # for pos in range(181):
     #     set_servo_angle(pos)
@@ -1358,7 +1436,25 @@ try:
     # spin_right(35, 35)
     # time.sleep(1.4)
 except KeyboardInterrupt:
-    pass
-pwm_ENA.stop()
-pwm_ENB.stop()
-GPIO.cleanup()
+    print("=== 程序被用户中断 ===")
+    print("正在清理资源...")
+except Exception as e:
+    print(f"=== 程序发生异常：{str(e)} ===")
+    print("正在清理资源...")
+finally:
+    print("正在停止PWM...")
+    try:
+        pwm_ENA.stop()
+        pwm_ENB.stop()
+        print("PWM已停止")
+    except:
+        print("PWM停止时发生错误")
+    
+    print("正在清理GPIO...")
+    try:
+        GPIO.cleanup()
+        print("GPIO清理完成")
+    except:
+        print("GPIO清理时发生错误")
+    
+    print("=== 程序结束 ===")
