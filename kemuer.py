@@ -1191,9 +1191,9 @@ def id_check():
 
 def play_weather():
     if weather_info and 'lives' in weather_info and len(weather_info['lives']) > 0:
-        text = "时间：" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        text = "时间：" + time.strftime("%Y-%m-%d %H:%M", time.localtime())
         text += f"，天气：{weather_info['lives'][0]['weather']}，气温：{weather_info['lives'][0]['temperature']}℃"
-        text += f"，计算声速：{speed_of_sound}米/秒"
+        text += f"，计算声速：{int(speed_of_sound)}米/秒"
         voice(text)
         if temperature > 30:
             voice("天气炎热，请考生做好防暑措施。")
