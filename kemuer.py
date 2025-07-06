@@ -28,7 +28,7 @@ import httpx
 # 在运行脚本前，请先设置该环境变量。
 API_KEY = os.environ.get("OPENAI_API_KEY") 
 # 您想要使用的模型
-MODEL = "openai/chatgpt-4o-latest"
+MODEL = "google/gemini-2.5-flash"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
 BASE_URL = "https://openrouter.ai/api/v1"
 # 如果您需要通过HTTPS代理访问，请在此处设置代理地址，例如 "http://127.0.0.1:7890"
