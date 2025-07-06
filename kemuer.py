@@ -23,6 +23,8 @@ import os
 import cv2
 import time
 import httpx
+from flask import Flask, Response, render_template_string
+import threading
 
 # --- 配置 ---
 # API 密钥将从环境变量 "OPENAI_API_KEY" 中读取，以提高安全性。
@@ -1266,6 +1268,148 @@ def play_weather():
         print("天气信息获取失败，无法播报天气")
         voice("天气信息获取失败")
 
+# 全局变量用于摄像头流
+camera = None
+streaming_active = False
+
+# Flask应用
+app = Flask(__name__)
+
+def generate_frames():
+    """生成摄像头帧用于流媒体"""
+    global camera, streaming_active
+    
+    while streaming_active:
+        if camera is None:
+            camera = cv2.VideoCapture(0)
+            if not camera.isOpened():
+                print("无法打开摄像头")
+                break
+        
+        success, frame = camera.read()
+        if not success:
+            print("无法读取摄像头帧")
+            break
+        else:
+            # 编码帧为JPEG格式
+            ret, buffer = cv2.imencode('.jpg', frame)
+            if ret:
+                frame = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            else:
+                print("帧编码失败")
+                break
+    
+    # 清理摄像头资源
+    if camera is not None:
+        camera.release()
+        camera = None
+
+@app.route('/')
+def index():
+    """主页面"""
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>科目二考试实时监控</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f0f0f0;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background-color: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #333;
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .video-container {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            img {
+                max-width: 100%;
+                height: auto;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+            }
+            .info {
+                background-color: #e8f4f8;
+                padding: 15px;
+                border-radius: 5px;
+                margin-top: 20px;
+            }
+            .status {
+                color: #28a745;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚗 科目二考试实时监控系统</h1>
+            <div class="video-container">
+                <img src="{{ url_for('video_feed') }}" alt="实时视频流">
+            </div>
+            <div class="info">
+                <h3>系统信息</h3>
+                <p><span class="status">● 在线</span> 摄像头实时监控</p>
+                <p>📍 端口：7070</p>
+                <p>🔄 自动刷新视频流</p>
+                <p>⏰ 当前时间：<span id="current-time"></span></p>
+            </div>
+        </div>
+        
+        <script>
+            // 更新当前时间
+            function updateTime() {
+                const now = new Date();
+                document.getElementById('current-time').textContent = now.toLocaleString('zh-CN');
+            }
+            
+            // 每秒更新时间
+            setInterval(updateTime, 1000);
+            updateTime();
+        </script>
+    </body>
+    </html>
+    ''')
+
+@app.route('/video_feed')
+def video_feed():
+    """视频流路由"""
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def start_web_server():
+    """启动Web服务器"""
+    global streaming_active
+    streaming_active = True
+    print("正在启动Web服务器...")
+    print("摄像头实时监控地址：http://localhost:7070")
+    print("请在浏览器中访问上述地址查看实时视频")
+    app.run(host='0.0.0.0', port=7070, debug=False, use_reloader=False)
+
+def stop_web_server():
+    """停止Web服务器"""
+    global streaming_active, camera
+    streaming_active = False
+    if camera is not None:
+        camera.release()
+        camera = None
+    print("Web服务器已停止")
+
 # try/except语句用来检测try语句块中的错误，
 # 从而让except语句捕获异常信息并处理。
 try:
@@ -1273,6 +1417,18 @@ try:
     print("正在初始化系统...")
     init()
     print("系统初始化完成")
+    
+    
+    print("=== 启动实时监控系统 ===")
+    # 在后台线程中启动Web服务器
+    web_server_thread = threading.Thread(target=start_web_server, daemon=True)
+    web_server_thread.start()
+    
+    # 等待服务器启动
+    voice("实时监控系统已启动，可通过浏览器访问7070端口查看实时画面。")
+    
+    raise Exception("测试")
+
     
     print("=== 开始身份验证流程 ===")
     while True:
@@ -1283,9 +1439,12 @@ try:
         else:
             print("身份验证失败，请重新尝试")
             voice("身份认证失败，请重新认证。")
+            
+    #
 
     print("=== 开始语音欢迎流程 ===")
     voice_welcome()
+    
     
     print("=== 播报天气信息 ===")
     # 播报天气信息
@@ -1442,6 +1601,13 @@ except Exception as e:
     print(f"=== 程序发生异常：{str(e)} ===")
     print("正在清理资源...")
 finally:
+    print("正在停止Web服务器...")
+    try:
+        stop_web_server()
+        print("Web服务器已停止")
+    except:
+        print("Web服务器停止时发生错误")
+    
     print("正在停止PWM...")
     try:
         pwm_ENA.stop()
