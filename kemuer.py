@@ -28,7 +28,7 @@ import httpx
 # 在运行脚本前，请先设置该环境变量。
 API_KEY = os.environ.get("OPENAI_API_KEY") 
 # 您想要使用的模型
-MODEL = "openai/gpt-4.1-mini"
+MODEL = "openai/gpt-4o-mini"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
 BASE_URL = "https://openrouter.ai/api/v1"
 # 如果您需要通过HTTPS代理访问，请在此处设置代理地址，例如 "http://127.0.0.1:7890"
@@ -1081,7 +1081,7 @@ def encode_image_to_base64(image_path):
         print(f"读取或编码图片时发生错误: {e}")
         return None
 
-def recognize_image_content(image_path, prompt="这张图片里有什么？请仅输出识别出的主要结果，不要输出任何其他东西。"):
+def recognize_image_content(image_path, prompt="接下来将发送一张身份证照片，请仅识别和输出其中的姓名和身份证信息。"):
     """
     :param image_path: 本地图片文件的路径。
     :param prompt: 您想对图片提出的问题。
