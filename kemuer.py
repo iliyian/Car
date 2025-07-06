@@ -1195,6 +1195,7 @@ def play_weather():
         text += f"，当前天气：{weather_info['lives'][0]['weather']}，温度：{weather_info['lives'][0]['temperature']}℃"
         text += f"，计算声速为：{speed_of_sound}米/秒"
         voice(text)
+        if 
     else:
         print("天气信息获取失败，无法播报天气")
         voice("天气信息获取失败")
