@@ -33,7 +33,7 @@ MODEL = "openai/gpt-4.1-mini"
 BASE_URL = "https://openrouter.ai/api/v1"
 # 如果您需要通过HTTPS代理访问，请在此处设置代理地址，例如 "http://127.0.0.1:7890"
 # 如果不需要代理，请将其留空 ""
-HTTPS_PROXY = os.environ.get("HTTPS_PROXY", "")
+HTTPS_PROXY = os.environ.get("https_proxy", "")
 # 图片保存的文件夹
 IMGS_DIR = "imgs"
 
