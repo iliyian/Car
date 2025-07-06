@@ -28,7 +28,7 @@ import httpx
 # 在运行脚本前，请先设置该环境变量。
 API_KEY = os.environ.get("OPENAI_API_KEY") 
 # 您想要使用的模型
-MODEL = "openai/gpt-4o-mini"
+MODEL = "openai/chatgpt-4o-latest"
 # API 地址, 如果您使用代理或第三方服务，请在此修改
 BASE_URL = "https://openrouter.ai/api/v1"
 # 如果您需要通过HTTPS代理访问，请在此处设置代理地址，例如 "http://127.0.0.1:7890"
@@ -962,11 +962,10 @@ def voice_welcome():
 def voice_play(id):
     os.system("mpg321 ./music/" + str(id) + ".mp3")
 
-def voice_avoid_obstacle():
-    prompt_text = "下一项目：障碍绕行。请准备。"
+def voice(prompt_text):
     tts = gTTS(prompt_text, lang='zh')  # 使用中文语音
-    tts.save("avoid_obstacle.mp3")
-    os.system("mpg321 avoid_obstacle.mp3")
+    tts.save(f"{prompt_text}.mp3")
+    os.system(f"mpg321 {prompt_text}.mp3")
 
 def send_mail(recipient, subject, text):
     sender = '1715428260@qq.com'
@@ -1145,18 +1144,26 @@ def camera_scan():
                 return description
     return None
 
-desp = camera_scan()
-if desp.contains("黄") or desp.contains("雨") or desp.contains("风") or desp.contains("阳"):
-    print("身份认证成功")
-else:
-    print("身份认证失败")
-raise Exception("测试")
+def id_check():
+    voice("请出示身份证")
+    desp = camera_scan()
+    if desp and ("黄" in desp or "雨" in desp or "风" in desp or "阳" in desp):
+        return True
+    return False
 
 # try/except语句用来检测try语句块中的错误，
 # 从而让except语句捕获异常信息并处理。
 try:
     init()
     
+    while True:
+        if id_check():
+            voice("身份认证成功，请开始考试。")
+            break
+        else:
+            voice("身份认证失败，请重新认证。")
+
+    raise Exception("测试")
     voice_welcome()
 
     # 任务1：考生人脸识别
@@ -1193,7 +1200,7 @@ try:
 
     # 任务_plus：避障
     # 实现方式：先避障，再回到巡线模式
-    voice_avoid_obstacle()
+    voice("下一项目：障碍绕行。请准备。")
     
     run(15,15)
     time.sleep(0.5)
