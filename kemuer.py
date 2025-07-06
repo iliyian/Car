@@ -1081,7 +1081,7 @@ def encode_image_to_base64(image_path):
         print(f"读取或编码图片时发生错误: {e}")
         return None
 
-def recognize_image_content(image_path, prompt="接下来请仅识别和输出图片中的文字，谢谢"):
+def recognize_image_content(image_path, prompt="接下来请仅识别和输出图片中的文字，不要输出任何其他信息，谢谢！"):
     """
     :param image_path: 本地图片文件的路径。
     :param prompt: 您想对图片提出的问题。
