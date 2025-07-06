@@ -1145,7 +1145,11 @@ def camera_scan():
                 return description
     return None
 
-camera_scan()
+desp = camera_scan()
+if desp.contains("黄") or desp.contains("雨") or desp.contains("风") or desp.contains("阳"):
+    print("身份认证成功")
+else:
+    print("身份认证失败")
 raise Exception("测试")
 
 # try/except语句用来检测try语句块中的错误，
