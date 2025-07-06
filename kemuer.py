@@ -1425,10 +1425,7 @@ try:
     web_server_thread.start()
     
     # 等待服务器启动
-    voice("实时监控系统已启动，可通过浏览器访问7070端口查看实时画面。")
-    
-    raise Exception("测试")
-
+    voice("实时监控系统已启动")
     
     print("=== 开始身份验证流程 ===")
     while True:
