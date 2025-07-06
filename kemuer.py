@@ -1338,7 +1338,7 @@ def id_check():
 
 def play_weather():
     if weather_info and 'lives' in weather_info and len(weather_info['lives']) > 0:
-        text = "时间：" + time.strftime("%Y-%m-%d %H:%M", time.localtime())
+        text = "时间：" + time.strftime("%Y年%m月%d %H时%M分", time.localtime())
         text += f"，天气：{weather_info['lives'][0]['weather']}，气温：{weather_info['lives'][0]['temperature']}℃"
         text += f"，计算声速：{int(speed_of_sound)}米每秒"
         voice(text)
@@ -1605,7 +1605,7 @@ try:
         if status.change_status(get_code()):
             print("退出双线模式")
             run(15,15)
-            time.sleep(1)
+            time.sleep(0.6)
             break
     print("曲线行驶任务完成")
 
