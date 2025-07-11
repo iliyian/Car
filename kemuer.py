@@ -12,7 +12,6 @@ from email.header import Header
 import requests
 import base64
 import cv2
-import json
 
 import speech_recognition as sr
 import re
@@ -839,9 +838,7 @@ def avoid():
             # run(20, 20)
             return
 
-
 # 侧方停车任务
-
 
 def parallel_parking():
     left(15, 15)
@@ -881,83 +878,11 @@ def park():
     brake()
     time.sleep(2) # 等待2秒
 
-
-# 邮件发送函数，参数recipient是接受者，subject是邮件主题，text是邮件内容
-# 注意，发送方的邮箱需要先开通SMTP的权限，允许第三方调用接口登录发送邮件
-
-# 上传考核成绩，并设置邮件发送的内容
-def upload():
-    email_host = 'smtp.qq.com'
-    email_port = 25
-    email_passwd = 'hghswlojovfofdee'  # 这个是发送QQ账号的授权码，而不是QQ账号的密码，否则发送会失败
-    sender = '1773819794@qq.com'  # 发送账号
-    receivers = '2809867235@qq.com'  # receivers接收账号
-    msg = MIMEMultipart()
-    msg['Subject'] = "科目二考核结果通知"
-    msg['From'] = sender
-    msg['To'] = ';'.join(receivers)
-    msg_text = MIMEText(_text='尊敬的陆先生：'+"\n"+"恭喜您在结束的科目二考试已完成成绩核查，考试得分：100分。"+"\n"+"您已成功通过科目二考试。\r\n30天后您可以选择申请科目三考试，祝您早日取得驾照。\n                                                                                                      "+time.strftime("%Y-%m-%d %H:%M:%S"),
-                        _subtype='plain', _charset='utf-8')
-    msg.attach(msg_text)
-    try:
-        smtpObj = smtplib.SMTP(email_host, email_port)
-        smtpObj.login(sender, email_passwd)
-        smtpObj.sendmail(sender, receivers, msg.as_string())
-        print("邮件发送成功！")
-        smtpObj.close()
-    except smtplib.SMTPException as e:
-        print("错误：邮件发送失败！")
-        print(e)
-
-def get_access_token():
-    """
-    使用 AK，SK 生成鉴权签名（Access Token）
-    :return: access_token，或是None(如果错误)
-    """
-    url = "https://aip.baidubce.com/oauth/2.0/token"
-    params = {"grant_type": "client_credentials", "client_id": API_KEY, "client_secret": SECRET_KEY}
-    return str(requests.post(url, params=params).json().get("access_token"))
-
-
-# 一种七彩灯点亮的策略，根据转动的角度来点亮相应的颜色
-def color_light(pos):
-    if pos > 100:
-        if pos > 150:
-            GPIO.output(LED_R, GPIO.HIGH)
-            GPIO.output(LED_G, GPIO.LOW)
-            GPIO.output(LED_B, GPIO.LOW)
-        elif pos > 125:
-            GPIO.output(LED_R, GPIO.LOW)
-            GPIO.output(LED_G, GPIO.HIGH)
-            GPIO.output(LED_B, GPIO.LOW)
-        else:
-            GPIO.output(LED_R, GPIO.LOW)
-            GPIO.output(LED_G, GPIO.LOW)
-            GPIO.output(LED_B, GPIO.HIGH)
-    else:
-        if pos > 75:
-            GPIO.output(LED_R, GPIO.HIGH)
-            GPIO.output(LED_G, GPIO.HIGH)
-            GPIO.output(LED_B, GPIO.LOW)
-        elif pos > 50:
-            GPIO.output(LED_R, GPIO.LOW)
-            GPIO.output(LED_G, GPIO.HIGH)
-            GPIO.output(LED_B, GPIO.HIGH)
-        elif pos > 25:
-            GPIO.output(LED_R, GPIO.HIGH)
-            GPIO.output(LED_G, GPIO.LOW)
-            GPIO.output(LED_B, GPIO.HIGH)
-        else:
-            GPIO.output(LED_R, GPIO.HIGH)
-            GPIO.output(LED_G, GPIO.HIGH)
-            GPIO.output(LED_B, GPIO.HIGH)
-
 def play_voice_prompt():
     prompt_text = "请报出场次科目二考试考生的编号"
     tts = gTTS(prompt_text, lang='zh')  # 使用中文语音
     tts.save("prompt.mp3")
     os.system("mpg321 prompt.mp3")  # 播放语音提示
-
 
 def voice_welcome():
 # 初始化语音识别器
