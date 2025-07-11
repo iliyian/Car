@@ -47,9 +47,6 @@ HTTPS_PROXY = os.environ.get("https_proxy", "")
 # 图片保存的文件夹
 IMGS_DIR = "imgs"
 
-# API_KEY = "hux9tzno5WcO00k0cMWu7k69"
-SECRET_KEY = "DI1QwKbl1NX4UZWojVGMYYSq4HWwyomm"
-
 POSTCAL_CODE = 330106 # 杭州市西湖区
 
 speed_of_sound = 0 # 声速
@@ -912,68 +909,6 @@ def upload():
         print("错误：邮件发送失败！")
         print(e)
 
-
-# 调用百度API接口，进行人脸比对
-def picture_shoot(image_name='img.jpg', image_path='/home/pi/Desktop/'):
-    '''
-    调用摄像头拍照并保存图片到本地
-    :param image_name: 图片名字
-    :param image_path: 图片保存路径
-    :return: None
-    '''
-    cap = cv2.VideoCapture(1)
-    while (cap.isOpened()):
-        ret, frame = cap.read()
-        # cv2.imshow("Capture_Paizhao", frame) # 显示窗口
-        cv2.imwrite(image_path  +""+ image_name, frame)
-        print("保存" + image_name + "成功!")
-        break
-    cap.release()
-    cv2.destroyAllWindows()
-
-def id_check():
-    picture_shoot()
-    url = "https://aip.baidubce.com/rest/2.0/face/v3/match?access_token=" + get_access_token()
-
-    image_path1 = "/home/pi/Desktop/cmp.jpg"
-    image_path2 = "/home/pi/Desktop/img.jpg"
-
-    image_data1 = get_file_content(image_path1)
-    image_data2 = get_file_content(image_path2)
-
-    payload = json.dumps([
-        {
-            "image_type": "BASE64",
-            "image": image_data1
-        },
-        {
-            "image_type": "BASE64",
-            "image": image_data2
-        }
-    ])
-    headers = {
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.request("POST", url, headers=headers, data=payload)
-    result=response.json()
-    #print(result)
-    if "result" in result:
-        if(result["result"] is None):
-            print('error')
-            return 0
-        score = result["result"]["score"]
-        print(score)
-        if(score>80):
-            print("识别成功")
-            return 1
-        else:print("识别失败")
-    else:
-        print("没有匹配结果")
-
-    return 0
-
-
 def get_access_token():
     """
     使用 AK，SK 生成鉴权签名（Access Token）
@@ -982,12 +917,6 @@ def get_access_token():
     url = "https://aip.baidubce.com/oauth/2.0/token"
     params = {"grant_type": "client_credentials", "client_id": API_KEY, "client_secret": SECRET_KEY}
     return str(requests.post(url, params=params).json().get("access_token"))
-
-
-def get_file_content(file_path):
-    with open(file_path, 'rb') as file:
-        image_data = file.read()
-    return base64.b64encode(image_data).decode('utf-8')
 
 
 # 一种七彩灯点亮的策略，根据转动的角度来点亮相应的颜色
@@ -1285,7 +1214,7 @@ def recognize_image_content(image_path, prompt="接下来请仅识别和输出�
                     ]
                 }
             ],
-            max_tokens=300, # 您可以根据需要调整返回内容的最大长度
+            max_tokens=300,
         )
         
         # 提取并返回模型的回答
@@ -1533,33 +1462,6 @@ try:
     # 播报天气信息
     play_weather()
 
-    # 任务1：考生人脸识别
-    
-#     set_camera_updown(180)
-#     # pwm_UpDownServo.ChangeDutyCycle(180)
-#     pwm_
-#     raise KeyError
-#
-#     while True:
-#         for i in range(10):
-#             set_camera_updown(180)
-#             set_camera_leftright(90)
-#             set_servo_angle(90)
-#         time.sleep(0.5)
-#         stop_camera_updown()
-#         stop_camera_leftright()
-#         stop_servo_angle()
-#         key_scan()
-#         if id_check():
-#             whistle()
-#             set_camera_updown(90)
-#             stop_camera_updown()
-#             break
-#
-#     # 任务2：S弯
-#     # 实现方式：巡线模式
-
-
     print("=== 开始科目二考试项目 ===")
     
     # 任务1：直角转弯
@@ -1619,25 +1521,6 @@ try:
     search_line_only(6)
     print("侧方停车任务完成")
 
-
-    # 任务8：再次人脸识别并提交考核成绩（发送邮件给考生）
-#     while True:
-#         for i in range(10):
-#             set_camera_updown(180)
-#             set_camera_leftright(90)
-#             set_servo_angle(90)
-#         time.sleep(0.5)
-#         stop_camera_updown()
-#         stop_camera_leftright()
-#         stop_servo_angle()
-#         key_scan()
-#         if id_check():
-#             whistle()
-#             set_camera_updown(90)
-#             stop_camera_updown()
-#             upload()
-#             break
-
     # 任务5：庆祝通过
     print("=== 所有任务完成，考试通过！ ===")
     
@@ -1656,38 +1539,6 @@ try:
     print(time_str)
     print("庆祝流程完成")
     
-    # for pos in range(181):
-    #     set_servo_angle(pos)
-    #     color_light(pos)
-    #     set_camera_updown(pos)
-    #     set_camera_leftright(pos)
-    #     time.sleep(0.01)
-    # for pos in reversed(range(181)):
-    #     set_servo_angle(pos)
-    #     color_light(pos)
-    #     set_camera_updown(pos)
-    #     set_camera_leftright(pos)
-    #     time.sleep(0.01)
-    # for pos in range(181):
-    #     set_servo_angle(pos)
-    #     color_light(pos)
-    #     set_camera_updown(pos)
-    #     set_camera_leftright(181 - pos)
-    #     time.sleep(0.01)
-    # for pos in reversed(range(181)):
-    #     set_servo_angle(pos)
-    #     color_light(pos)
-    #     set_camera_updown(pos)
-    #     set_camera_leftright(181 - pos)
-    #     time.sleep(0.01)
-    # stop_camera_leftright()
-    # stop_camera_updown()
-    # stop_servo_angle()
-    # time.sleep(0.1)
-    # spin_left(35, 35)
-    # time.sleep(1.4)
-    # spin_right(35, 35)
-    # time.sleep(1.4)
 except KeyboardInterrupt:
     print("=== 程序被用户中断 ===")
     print("正在清理资源...")
